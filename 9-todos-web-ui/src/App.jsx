@@ -12,20 +12,12 @@ import todosReducer from "./reducers/todos.js";
 import TodosContext from "./contexts/TodosContext.jsx";
 
 function App() {
-
   const [todos, dispatch] = useReducer(todosReducer, [
     { id: 1, title: "Learn Javscript", completed: true },
     { id: 2, title: "Learn React", completed: false },
     { id: 3, title: "Learn Redux!", completed: false }
   ]);
-
-  // const handleEnter = (value) => {
-  //   if (!value) return;
-  //   dispatch({
-  //     type: "ADD_TODO",
-  //     title: value
-  //   });
-  // }
+  const [tab, setTab] = useState('all');
 
   const handleToggleAll = (e) => {
     dispatch({
@@ -33,9 +25,13 @@ function App() {
     });
   }
 
+  const handleTabChange = (tab) => {
+    setTab(tab);
+  }
+
   return (
     <section className="todoapp">
-      <TodosContext.Provider value={{ todos, dispatch }}>
+      <TodosContext.Provider value={{ todos, tab, dispatch }}>
         <header className="header">
           <h1>todos</h1>
           <Input /*onEnter={handleEnter} */ />
@@ -47,7 +43,7 @@ function App() {
           </div>
           <List /*todos={todos}*/ />
         </main>
-        <Footer />
+        <Footer onTabChange={handleTabChange} />
       </TodosContext.Provider>
     </section>
   )
