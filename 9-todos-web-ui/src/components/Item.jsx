@@ -1,6 +1,6 @@
 
 
-function TodoItem() {
+function Item() {
     return (
         <li className="todo">
             <div className="view">
@@ -12,4 +12,4 @@ function TodoItem() {
     )
 }
 
-export default TodoItem;
+export default Item;

@@ -1,6 +1,6 @@
 
 
-function TodoInput() {
+function Input() {
     return (
         <>
             <input className="new-todo"
@@ -10,4 +10,4 @@ function TodoInput() {
     )
 }
 
-export default TodoInput;
+export default Input;

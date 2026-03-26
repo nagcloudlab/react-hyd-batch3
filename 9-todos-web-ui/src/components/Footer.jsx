@@ -1,6 +1,6 @@
 
 
-function TodoFooter() {
+function Footer() {
     return (
         <footer className="footer">
             <span className="todo-count"></span>
@@ -19,4 +19,4 @@ function TodoFooter() {
         </footer>
     )
 }
-export default TodoFooter;
+export default Footer;
