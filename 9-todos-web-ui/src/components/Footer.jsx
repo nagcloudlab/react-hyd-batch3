@@ -3,7 +3,7 @@
 function Footer() {
     return (
         <footer className="footer">
-            <span className="todo-count"></span>
+            <span className="todo-count">0 items left</span>
             <ul className="filters">
                 <li>
                     <a href="#/" className="selected">All</a>
