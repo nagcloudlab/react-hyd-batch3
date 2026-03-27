@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { use, useEffect, useState } from 'react'
 import classNames from 'classnames';
 import Review from './Review';
 
@@ -10,34 +10,44 @@ function Product({ product, onBuy }) {
     const { cart, dispatch } = useContext(CartContext);
 
     const [currentTab, setCurrentTab] = useState(1);
-    const reviews = [
-        {
-            id: 1,
-            name: 'John Doe',
-            rating: 5,
-            comment: 'This is a great product',
-            date: '2026-03-25'
-        },
-        {
-            id: 2,
-            name: 'Jane Doe',
-            rating: 4,
-            comment: 'This is a good product',
-            date: '2026-03-24'
-        }
-    ]
+    const [reviews, setReviews] = useState([])
 
     const isInCart = cart.some(cartLine => cartLine.id === product.id);
     const cartLine = cart.find(cartLine => cartLine.id === product.id);
+
+    useEffect(() => {
+        if (currentTab !== 3) return;
+        const fetchReviews = async () => {
+            const response = await fetch(`http://localhost:3000/products/${product.id}/reviews`);
+            const data = await response.json();
+            setReviews(data);
+        }
+        fetchReviews();
+    }, [currentTab])
 
     const handleTabChange = (tabIndex) => {
         setCurrentTab(tabIndex);
     }
 
+
     const renderReviews = () => {
         return reviews.map(review => (
             <Review key={review.id} review={review} />
         ))
+    }
+
+    const handleNewReview = (review) => {
+        fetch(`http://localhost:3000/products/${product.id}/reviews`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(review)
+        })
+            .then(response => response.json())
+            .then(data => {
+                setReviews([...reviews, data]);
+            })
     }
 
     const renderTabPanel = () => {
@@ -57,7 +67,7 @@ function Product({ product, onBuy }) {
             case 3:
                 return (
                     <>
-                        <ReviewForm />
+                        <ReviewForm onSubmit={handleNewReview} />
                         {renderReviews()}
                     </>
                 )
