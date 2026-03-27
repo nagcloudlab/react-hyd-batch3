@@ -4,6 +4,7 @@ import Review from './Review';
 
 import { useContext } from 'react';
 import CartContext from '../contexts/CartContext';
+import ReviewForm from './ReviewForm';
 
 function Product({ product, onBuy }) {
     const { cart, dispatch } = useContext(CartContext);
@@ -56,6 +57,7 @@ function Product({ product, onBuy }) {
             case 3:
                 return (
                     <>
+                        <ReviewForm />
                         {renderReviews()}
                     </>
                 )
