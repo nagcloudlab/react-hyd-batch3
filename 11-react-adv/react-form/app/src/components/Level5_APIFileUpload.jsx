@@ -28,7 +28,6 @@ function APIFormDemo() {
     if (loading) return;
     setLoading(true);
     setResult(null);
-
     try {
       // Simulated API call
       await new Promise((resolve) => setTimeout(resolve, 1500));

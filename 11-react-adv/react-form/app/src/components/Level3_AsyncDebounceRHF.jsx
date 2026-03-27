@@ -26,15 +26,12 @@ function AsyncDebounceDemo() {
       setStatus("");
       return;
     }
-
     setStatus("checking");
-
     const timeout = setTimeout(() => {
       checkUsername(username).then((available) => {
         setStatus(available ? "available" : "taken");
       });
     }, 500);
-
     return () => clearTimeout(timeout);
   }, [username]);
 

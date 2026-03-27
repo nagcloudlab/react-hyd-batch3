@@ -1,26 +1,11 @@
 
-import { useState, useReducer } from 'react';
+import { useMemo, useReducer, useState } from 'react';
+import { Outlet } from 'react-router-dom';
 import Navbar from './components/Navbar';
-import ProductList from './components/ProductList';
-import CartTable from './components/CartTable';
 import CartContext from './contexts/CartContext';
+import AuthContext from './contexts/AuthContext';
 
 import cartreducer from './reducers/cart';
-
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  BrowserRouter,
-} from 'react-router-dom'
-
-// import {
-//   createBrowserRouter,
-//   RouterProvider,
-// } from "react-router-dom";
-
-import Home from './components/Home';
-import NotFound from './components/NotFound';
 
 
 
@@ -28,21 +13,40 @@ function App() {
 
   console.log("App Rendered");
   const [cart, dispatch] = useReducer(cartreducer, []);
+  const [isAuthenticated, setIsAuthenticated] = useState(() => localStorage.getItem('isAuth') === 'true');
+
+  const login = (username, password) => {
+    if (username === 'admin' && password === '1234') {
+      setIsAuthenticated(true);
+      localStorage.setItem('isAuth', 'true');
+      return true;
+    }
+    return false;
+  };
+
+  const logout = () => {
+    setIsAuthenticated(false);
+    localStorage.removeItem('isAuth');
+  };
+
+  const authValue = useMemo(
+    () => ({
+      isAuthenticated,
+      login,
+      logout,
+    }),
+    [isAuthenticated],
+  );
 
   return (
     <div className="container">
-      <CartContext.Provider value={{ cart, dispatch }}>
-        <BrowserRouter>
+      <AuthContext.Provider value={authValue}>
+        <CartContext.Provider value={{ cart, dispatch }}>
           <Navbar title="Shop IT" />
           <hr />
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/products" element={<ProductList />} />
-            <Route path="/cart" element={<CartTable />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </CartContext.Provider>
+          <Outlet />
+        </CartContext.Provider>
+      </AuthContext.Provider>
     </div>
   );
 }
