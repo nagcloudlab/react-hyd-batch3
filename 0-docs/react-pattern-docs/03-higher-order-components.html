@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Higher-Order Components (HOC) — React Patterns</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --accent: #a855f7;
+      --accent-light: #faf5ff;
+      --problem-bg: #fff7ed;
+      --problem-border: #fb923c;
+      --solution-bg: #f0fdf4;
+      --solution-border: #4ade80;
+      --code-bg: #1e1e2e;
+      --code-text: #cdd6f4;
+      --text: #1e293b;
+      --text-light: #64748b;
+      --surface: #ffffff;
+      --border: #e2e8f0;
+      --font: 'Inter', -apple-system, sans-serif;
+      --mono: 'Fira Code', 'Consolas', monospace;
+    }
+    body { font-family: var(--font); color: var(--text); line-height: 1.7; max-width: 960px; margin: 0 auto; padding: 2rem; background: #fafbfc; }
+    h1 { font-size: 2.5rem; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 0.5rem; }
+    h2 { font-size: 1.5rem; font-weight: 700; margin: 2.5rem 0 1rem; color: var(--accent); }
+    h3 { font-size: 1.15rem; font-weight: 600; margin: 1.5rem 0 0.75rem; }
+    p, li { font-size: 1.05rem; margin-bottom: 0.75rem; }
+    ul { padding-left: 1.5rem; }
+    .badge { display: inline-block; background: var(--accent); color: #fff; font-size: 0.8rem; font-weight: 600; padding: 0.25rem 0.75rem; border-radius: 999px; margin-bottom: 1rem; letter-spacing: 0.05em; text-transform: uppercase; }
+    .subtitle { font-size: 1.25rem; color: var(--text-light); font-weight: 400; margin-bottom: 2rem; }
+    .problem-box, .solution-box { padding: 1.5rem 2rem; border-radius: 12px; margin: 1.5rem 0; border-left: 4px solid; }
+    .problem-box { background: var(--problem-bg); border-color: var(--problem-border); }
+    .problem-box h3::before { content: '\26A0 '; }
+    .solution-box { background: var(--solution-bg); border-color: var(--solution-border); }
+    .solution-box h3::before { content: '\2726 '; }
+    pre { background: var(--code-bg); color: var(--code-text); padding: 1.5rem; border-radius: 10px; overflow-x: auto; margin: 1rem 0; font-size: 0.92rem; line-height: 1.6; }
+    code { font-family: var(--mono); font-size: 0.9em; }
+    :not(pre) > code { background: #f1f5f9; padding: 0.15em 0.4em; border-radius: 4px; color: var(--accent); }
+    .diagram { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 2rem; margin: 2rem 0; text-align: center; }
+    .diagram svg { max-width: 100%; height: auto; }
+    .card-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin: 1.5rem 0; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1.25rem 1.5rem; }
+    .card h4 { font-weight: 600; margin-bottom: 0.5rem; }
+    .do-card { border-left: 4px solid #22c55e; }
+    .dont-card { border-left: 4px solid #ef4444; }
+    .nav { display: flex; justify-content: space-between; padding: 1rem 0; border-top: 1px solid var(--border); margin-top: 3rem; font-size: 0.95rem; }
+    .nav a { color: var(--accent); text-decoration: none; font-weight: 500; }
+    .nav a:hover { text-decoration: underline; }
+    .top-nav { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border); }
+    .top-nav a { color: var(--text-light); text-decoration: none; font-size: 0.85rem; padding: 0.3rem 0.7rem; border-radius: 6px; background: #f1f5f9; transition: all 0.2s; }
+    .top-nav a:hover, .top-nav a.active { background: var(--accent); color: #fff; }
+    .key-takeaway { background: var(--accent-light); border-radius: 12px; padding: 1.5rem 2rem; margin: 2rem 0; }
+    .key-takeaway h3 { color: var(--accent); margin-top: 0; }
+    .comment { color: #6a9955; }
+    .keyword { color: #c586c0; }
+    .function { color: #dcdcaa; }
+    .string { color: #ce9178; }
+    .component { color: #4ec9b0; }
+    .tag { color: #569cd6; }
+    .attr { color: #9cdcfe; }
+    @media print { body { max-width: 100%; } .top-nav, .nav { display: none; } }
+  </style>
+</head>
+<body>
+
+  <nav class="top-nav">
+    <a href="index.html">Home</a>
+    <a href="01-compound-components.html">Compound Components</a>
+    <a href="02-render-props.html">Render Props</a>
+    <a href="03-higher-order-components.html" class="active">HOCs</a>
+    <a href="04-custom-hooks.html">Custom Hooks</a>
+    <a href="05-container-presentational.html">Container/Presentational</a>
+    <a href="06-state-reducer.html">State Reducer</a>
+    <a href="07-memoization.html">Memoization</a>
+    <a href="08-code-splitting.html">Code Splitting</a>
+    <a href="09-context-module.html">Context Module</a>
+    <a href="10-lazy-loading.html">Lazy Loading</a>
+    <a href="11-slot-pattern.html">Slot Pattern</a>
+  </nav>
+
+  <span class="badge">Component Pattern</span>
+  <h1>Higher-Order Components (HOC)</h1>
+  <p class="subtitle">A function that takes a component and returns a new enhanced component</p>
+
+  <!-- ===================== THE PROBLEM ===================== -->
+  <h2>The Problem</h2>
+
+  <div class="problem-box">
+    <h3>Cross-Cutting Concerns Lead to Duplicated Logic</h3>
+    <p>Multiple components need the same behavior &mdash; authentication checks, logging, theming, data fetching. Without a reuse strategy, you end up copy-pasting the same logic into every component. When that logic changes, you have to update it everywhere.</p>
+  </div>
+
+  <h3>Before: Duplicated Auth Checks Everywhere</h3>
+  <pre><code><span class="keyword">import</span> { <span class="attr">useState</span>, <span class="attr">useEffect</span> } <span class="keyword">from</span> <span class="string">'react'</span>;
+<span class="keyword">import</span> { <span class="attr">getCurrentUser</span> } <span class="keyword">from</span> <span class="string">'./auth'</span>;
+
+<span class="comment">// --- Dashboard.jsx ---</span>
+<span class="keyword">function</span> <span class="component">Dashboard</span>() {
+  <span class="keyword">const</span> [<span class="attr">user</span>, <span class="attr">setUser</span>] = <span class="function">useState</span>(<span class="keyword">null</span>);
+  <span class="keyword">const</span> [<span class="attr">loading</span>, <span class="attr">setLoading</span>] = <span class="function">useState</span>(<span class="keyword">true</span>);
+
+  <span class="function">useEffect</span>(() =&gt; {
+    <span class="function">getCurrentUser</span>()
+      .<span class="function">then</span>(<span class="attr">u</span> =&gt; <span class="function">setUser</span>(<span class="attr">u</span>))
+      .<span class="function">finally</span>(() =&gt; <span class="function">setLoading</span>(<span class="keyword">false</span>));
+  }, []);
+
+  <span class="keyword">if</span> (<span class="attr">loading</span>) <span class="keyword">return</span> <span class="tag">&lt;p&gt;</span>Loading...<span class="tag">&lt;/p&gt;</span>;
+  <span class="keyword">if</span> (!<span class="attr">user</span>) <span class="keyword">return</span> <span class="tag">&lt;</span><span class="component">Redirect</span> <span class="attr">to</span>=<span class="string">"/login"</span> <span class="tag">/&gt;</span>;
+
+  <span class="keyword">return</span> <span class="tag">&lt;h1&gt;</span>Welcome to Dashboard, {<span class="attr">user</span>.<span class="attr">name</span>}<span class="tag">&lt;/h1&gt;</span>;
+}
+
+<span class="comment">// --- Settings.jsx --- (same auth logic, again)</span>
+<span class="keyword">function</span> <span class="component">Settings</span>() {
+  <span class="keyword">const</span> [<span class="attr">user</span>, <span class="attr">setUser</span>] = <span class="function">useState</span>(<span class="keyword">null</span>);
+  <span class="keyword">const</span> [<span class="attr">loading</span>, <span class="attr">setLoading</span>] = <span class="function">useState</span>(<span class="keyword">true</span>);
+
+  <span class="function">useEffect</span>(() =&gt; {
+    <span class="function">getCurrentUser</span>()
+      .<span class="function">then</span>(<span class="attr">u</span> =&gt; <span class="function">setUser</span>(<span class="attr">u</span>))
+      .<span class="function">finally</span>(() =&gt; <span class="function">setLoading</span>(<span class="keyword">false</span>));
+  }, []);
+
+  <span class="keyword">if</span> (<span class="attr">loading</span>) <span class="keyword">return</span> <span class="tag">&lt;p&gt;</span>Loading...<span class="tag">&lt;/p&gt;</span>;
+  <span class="keyword">if</span> (!<span class="attr">user</span>) <span class="keyword">return</span> <span class="tag">&lt;</span><span class="component">Redirect</span> <span class="attr">to</span>=<span class="string">"/login"</span> <span class="tag">/&gt;</span>;
+
+  <span class="keyword">return</span> <span class="tag">&lt;h1&gt;</span>Settings for {<span class="attr">user</span>.<span class="attr">name</span>}<span class="tag">&lt;/h1&gt;</span>;
+}
+
+<span class="comment">// --- Profile.jsx --- (and again!)</span>
+<span class="keyword">function</span> <span class="component">Profile</span>() {
+  <span class="keyword">const</span> [<span class="attr">user</span>, <span class="attr">setUser</span>] = <span class="function">useState</span>(<span class="keyword">null</span>);
+  <span class="keyword">const</span> [<span class="attr">loading</span>, <span class="attr">setLoading</span>] = <span class="function">useState</span>(<span class="keyword">true</span>);
+
+  <span class="function">useEffect</span>(() =&gt; {
+    <span class="function">getCurrentUser</span>()
+      .<span class="function">then</span>(<span class="attr">u</span> =&gt; <span class="function">setUser</span>(<span class="attr">u</span>))
+      .<span class="function">finally</span>(() =&gt; <span class="function">setLoading</span>(<span class="keyword">false</span>));
+  }, []);
+
+  <span class="keyword">if</span> (<span class="attr">loading</span>) <span class="keyword">return</span> <span class="tag">&lt;p&gt;</span>Loading...<span class="tag">&lt;/p&gt;</span>;
+  <span class="keyword">if</span> (!<span class="attr">user</span>) <span class="keyword">return</span> <span class="tag">&lt;</span><span class="component">Redirect</span> <span class="attr">to</span>=<span class="string">"/login"</span> <span class="tag">/&gt;</span>;
+
+  <span class="keyword">return</span> <span class="tag">&lt;h1&gt;</span>Profile: {<span class="attr">user</span>.<span class="attr">name</span>}<span class="tag">&lt;/h1&gt;</span>;
+}</code></pre>
+
+  <p>Three components. Identical auth logic in each. If you need to change the redirect path or add role-based checks, you have to touch every file. This does not scale.</p>
+
+  <!-- ===================== THE DIAGRAM ===================== -->
+  <h2>How a Higher-Order Component Works</h2>
+
+  <div class="diagram">
+    <svg viewBox="0 0 800 320" xmlns="http://www.w3.org/2000/svg" fill="none">
+      <!-- Original Component -->
+      <rect x="30" y="120" width="170" height="80" rx="12" fill="#faf5ff" stroke="#a855f7" stroke-width="2"/>
+      <text x="115" y="155" text-anchor="middle" font-family="Inter, sans-serif" font-size="13" font-weight="600" fill="#1e293b">Original Component</text>
+      <text x="115" y="178" text-anchor="middle" font-family="Fira Code, monospace" font-size="11" fill="#64748b">&lt;Dashboard /&gt;</text>
+
+      <!-- Arrow in -->
+      <line x1="200" y1="160" x2="270" y2="160" stroke="#a855f7" stroke-width="2" stroke-dasharray="6,4"/>
+      <polygon points="270,155 282,160 270,165" fill="#a855f7"/>
+
+      <!-- HOC Box (the factory) -->
+      <rect x="284" y="50" width="230" height="220" rx="16" fill="#faf5ff" stroke="#a855f7" stroke-width="2.5" stroke-dasharray="0"/>
+      <rect x="304" y="70" width="190" height="36" rx="8" fill="#a855f7"/>
+      <text x="399" y="94" text-anchor="middle" font-family="Fira Code, monospace" font-size="13" font-weight="600" fill="#fff">withAuth(Component)</text>
+
+      <!-- Inner layers -->
+      <rect x="310" y="122" width="178" height="40" rx="8" fill="#ede9fe" stroke="#c4b5fd" stroke-width="1.5"/>
+      <text x="399" y="147" text-anchor="middle" font-family="Inter, sans-serif" font-size="12" fill="#7c3aed">Auth Check Logic</text>
+
+      <rect x="310" y="176" width="178" height="40" rx="8" fill="#f5f3ff" stroke="#ddd6fe" stroke-width="1.5"/>
+      <text x="399" y="195" text-anchor="middle" font-family="Inter, sans-serif" font-size="11" fill="#64748b">Loading / Redirect</text>
+      <text x="399" y="210" text-anchor="middle" font-family="Inter, sans-serif" font-size="11" fill="#64748b">or render wrapped</text>
+
+      <rect x="334" y="228" width="130" height="28" rx="6" fill="#faf5ff" stroke="#a855f7" stroke-width="1"/>
+      <text x="399" y="247" text-anchor="middle" font-family="Fira Code, monospace" font-size="10" fill="#a855f7">&lt;Component /&gt;</text>
+
+      <!-- Arrow out -->
+      <line x1="514" y1="160" x2="584" y2="160" stroke="#a855f7" stroke-width="2" stroke-dasharray="6,4"/>
+      <polygon points="584,155 596,160 584,165" fill="#a855f7"/>
+
+      <!-- Enhanced Component -->
+      <rect x="598" y="100" width="180" height="120" rx="12" fill="#f5f3ff" stroke="#a855f7" stroke-width="2.5"/>
+      <text x="688" y="132" text-anchor="middle" font-family="Inter, sans-serif" font-size="13" font-weight="700" fill="#7c3aed">Enhanced Component</text>
+      <line x1="618" y1="144" x2="758" y2="144" stroke="#ddd6fe" stroke-width="1"/>
+      <text x="688" y="166" text-anchor="middle" font-family="Inter, sans-serif" font-size="11" fill="#64748b">Auth logic included</text>
+      <text x="688" y="186" text-anchor="middle" font-family="Inter, sans-serif" font-size="11" fill="#64748b">+ original UI</text>
+      <text x="688" y="208" text-anchor="middle" font-family="Fira Code, monospace" font-size="10" fill="#a855f7">AuthDashboard</text>
+    </svg>
+  </div>
+
+  <p>A Higher-Order Component is a <strong>function</strong> that accepts a component and returns a <strong>new</strong> component with additional behavior. The original component is never modified &mdash; it is wrapped and composed.</p>
+
+  <!-- ===================== THE SOLUTION ===================== -->
+  <h2>The Solution</h2>
+
+  <div class="solution-box">
+    <h3>Create a Reusable <code>withAuth</code> HOC</h3>
+    <p>Write the auth logic once inside a wrapper function. Any component you pass in automatically gains authentication behavior, loading states, and redirect handling &mdash; without changing a single line of its own code.</p>
+  </div>
+
+  <h3>The HOC Implementation</h3>
+  <pre><code><span class="keyword">import</span> { <span class="attr">useState</span>, <span class="attr">useEffect</span> } <span class="keyword">from</span> <span class="string">'react'</span>;
+<span class="keyword">import</span> { <span class="attr">Navigate</span> } <span class="keyword">from</span> <span class="string">'react-router-dom'</span>;
+<span class="keyword">import</span> { <span class="attr">getCurrentUser</span> } <span class="keyword">from</span> <span class="string">'./auth'</span>;
+
+<span class="comment">// The Higher-Order Component</span>
+<span class="keyword">function</span> <span class="function">withAuth</span>(<span class="component">WrappedComponent</span>) {
+  <span class="comment">// Return a new component</span>
+  <span class="keyword">return function</span> <span class="component">WithAuthComponent</span>(<span class="attr">props</span>) {
+    <span class="keyword">const</span> [<span class="attr">user</span>, <span class="attr">setUser</span>] = <span class="function">useState</span>(<span class="keyword">null</span>);
+    <span class="keyword">const</span> [<span class="attr">loading</span>, <span class="attr">setLoading</span>] = <span class="function">useState</span>(<span class="keyword">true</span>);
+
+    <span class="function">useEffect</span>(() =&gt; {
+      <span class="function">getCurrentUser</span>()
+        .<span class="function">then</span>(<span class="attr">u</span> =&gt; <span class="function">setUser</span>(<span class="attr">u</span>))
+        .<span class="function">finally</span>(() =&gt; <span class="function">setLoading</span>(<span class="keyword">false</span>));
+    }, []);
+
+    <span class="keyword">if</span> (<span class="attr">loading</span>) <span class="keyword">return</span> <span class="tag">&lt;p&gt;</span>Authenticating...<span class="tag">&lt;/p&gt;</span>;
+    <span class="keyword">if</span> (!<span class="attr">user</span>) <span class="keyword">return</span> <span class="tag">&lt;</span><span class="component">Navigate</span> <span class="attr">to</span>=<span class="string">"/login"</span> <span class="tag">/&gt;</span>;
+
+    <span class="comment">// Pass the user + original props to the wrapped component</span>
+    <span class="keyword">return</span> <span class="tag">&lt;</span><span class="component">WrappedComponent</span> <span class="attr">user</span>={<span class="attr">user</span>} {<span class="keyword">...</span><span class="attr">props</span>} <span class="tag">/&gt;</span>;
+  };
+}
+
+<span class="comment">// Give it a useful display name for React DevTools</span>
+<span class="comment">// (see "Best Practices" below)</span></code></pre>
+
+  <h3>After: Clean, DRY Components</h3>
+  <pre><code><span class="comment">// --- Dashboard.jsx ---</span>
+<span class="keyword">function</span> <span class="component">Dashboard</span>({ <span class="attr">user</span> }) {
+  <span class="keyword">return</span> <span class="tag">&lt;h1&gt;</span>Welcome to Dashboard, {<span class="attr">user</span>.<span class="attr">name</span>}<span class="tag">&lt;/h1&gt;</span>;
+}
+<span class="keyword">export default</span> <span class="function">withAuth</span>(<span class="component">Dashboard</span>);
+
+<span class="comment">// --- Settings.jsx ---</span>
+<span class="keyword">function</span> <span class="component">Settings</span>({ <span class="attr">user</span> }) {
+  <span class="keyword">return</span> <span class="tag">&lt;h1&gt;</span>Settings for {<span class="attr">user</span>.<span class="attr">name</span>}<span class="tag">&lt;/h1&gt;</span>;
+}
+<span class="keyword">export default</span> <span class="function">withAuth</span>(<span class="component">Settings</span>);
+
+<span class="comment">// --- Profile.jsx ---</span>
+<span class="keyword">function</span> <span class="component">Profile</span>({ <span class="attr">user</span> }) {
+  <span class="keyword">return</span> <span class="tag">&lt;h1&gt;</span>Profile: {<span class="attr">user</span>.<span class="attr">name</span>}<span class="tag">&lt;/h1&gt;</span>;
+}
+<span class="keyword">export default</span> <span class="function">withAuth</span>(<span class="component">Profile</span>);
+
+<span class="comment">// Auth logic lives in ONE place. Components stay focused on their own UI.</span></code></pre>
+
+  <!-- ===================== WHEN TO USE ===================== -->
+  <h2>When to Use</h2>
+
+  <div class="card-row">
+    <div class="card do-card">
+      <h4>Use HOCs When</h4>
+      <ul>
+        <li>You have <strong>cross-cutting concerns</strong> shared by many components (auth, logging, analytics, theming)</li>
+        <li>You're working with <strong>class components</strong> or a legacy codebase where hooks aren't an option</li>
+        <li>You need to <strong>conditionally render</strong> a component (e.g., show a login page instead)</li>
+        <li>You want to <strong>inject props</strong> transparently without the wrapped component knowing</li>
+      </ul>
+    </div>
+    <div class="card dont-card">
+      <h4>Avoid HOCs When</h4>
+      <ul>
+        <li>You're using <strong>function components</strong> and a <strong>custom hook</strong> would be simpler</li>
+        <li>Stacking multiple HOCs creates <strong>"wrapper hell"</strong> in the component tree</li>
+        <li>The HOC needs to pass many props, causing <strong>prop name collisions</strong></li>
+        <li>The abstraction obscures what props a component receives, hurting <strong>readability</strong></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ===================== REAL WORLD ===================== -->
+  <h2>HOCs in the Wild</h2>
+
+  <p>Higher-Order Components were <strong>the</strong> dominant pattern for logic reuse before React Hooks arrived in version 16.8. You will still encounter them frequently in production codebases:</p>
+
+  <ul>
+    <li><code>connect(mapState, mapDispatch)(Component)</code> &mdash; Redux's classic API for connecting components to the store</li>
+    <li><code>withRouter(Component)</code> &mdash; React Router v5 for injecting <code>history</code>, <code>location</code>, and <code>match</code> props</li>
+    <li><code>withStyles(styles)(Component)</code> &mdash; Material UI's styling injection (JSS-based)</li>
+    <li><code>memo(Component)</code> &mdash; React's own <code>React.memo</code> is technically a HOC that adds memoization</li>
+  </ul>
+
+  <h3>Best Practice: Set a Display Name</h3>
+  <pre><code><span class="keyword">function</span> <span class="function">withAuth</span>(<span class="component">WrappedComponent</span>) {
+  <span class="keyword">function</span> <span class="component">WithAuthComponent</span>(<span class="attr">props</span>) {
+    <span class="comment">// ... auth logic</span>
+  }
+
+  <span class="comment">// Helps identify components in React DevTools</span>
+  <span class="component">WithAuthComponent</span>.<span class="attr">displayName</span> =
+    <span class="string">`WithAuth(${</span><span class="component">WrappedComponent</span>.<span class="attr">displayName</span> || <span class="component">WrappedComponent</span>.<span class="attr">name</span> || <span class="string">'Component'})`</span>;
+
+  <span class="keyword">return</span> <span class="component">WithAuthComponent</span>;
+}</code></pre>
+
+  <!-- ===================== KEY TAKEAWAY ===================== -->
+  <div class="key-takeaway">
+    <h3>Key Takeaway</h3>
+    <p>HOCs follow the principle: <strong>don't modify the original component, compose it.</strong> Think of them as decorators for React components. They wrap behavior around a component without touching its internals &mdash; a clean application of the open/closed principle.</p>
+  </div>
+
+  <!-- ===================== NAVIGATION ===================== -->
+  <nav class="nav">
+    <a href="02-render-props.html">&larr; Render Props</a>
+    <a href="04-custom-hooks.html">Custom Hooks &rarr;</a>
+  </nav>
+
+</body>
+</html>

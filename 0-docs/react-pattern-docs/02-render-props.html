@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Render Props — React Patterns</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --accent: #8b5cf6;
+      --accent-light: #f5f3ff;
+      --problem-bg: #fff7ed;
+      --problem-border: #fb923c;
+      --solution-bg: #f0fdf4;
+      --solution-border: #4ade80;
+      --code-bg: #1e1e2e;
+      --code-text: #cdd6f4;
+      --text: #1e293b;
+      --text-light: #64748b;
+      --surface: #ffffff;
+      --border: #e2e8f0;
+      --font: 'Inter', -apple-system, sans-serif;
+      --mono: 'Fira Code', 'Consolas', monospace;
+    }
+    body { font-family: var(--font); color: var(--text); line-height: 1.7; max-width: 960px; margin: 0 auto; padding: 2rem; background: #fafbfc; }
+    h1 { font-size: 2.5rem; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 0.5rem; }
+    h2 { font-size: 1.5rem; font-weight: 700; margin: 2.5rem 0 1rem; color: var(--accent); }
+    h3 { font-size: 1.15rem; font-weight: 600; margin: 1.5rem 0 0.75rem; }
+    p, li { font-size: 1.05rem; margin-bottom: 0.75rem; }
+    ul { padding-left: 1.5rem; }
+    .badge { display: inline-block; background: var(--accent); color: #fff; font-size: 0.8rem; font-weight: 600; padding: 0.25rem 0.75rem; border-radius: 999px; margin-bottom: 1rem; letter-spacing: 0.05em; text-transform: uppercase; }
+    .subtitle { font-size: 1.25rem; color: var(--text-light); font-weight: 400; margin-bottom: 2rem; }
+    .problem-box, .solution-box { padding: 1.5rem 2rem; border-radius: 12px; margin: 1.5rem 0; border-left: 4px solid; }
+    .problem-box { background: var(--problem-bg); border-color: var(--problem-border); }
+    .problem-box h3::before { content: '\26A0  '; }
+    .solution-box { background: var(--solution-bg); border-color: var(--solution-border); }
+    .solution-box h3::before { content: '\2726  '; }
+    pre { background: var(--code-bg); color: var(--code-text); padding: 1.5rem; border-radius: 10px; overflow-x: auto; margin: 1rem 0; font-size: 0.92rem; line-height: 1.6; }
+    code { font-family: var(--mono); font-size: 0.9em; }
+    :not(pre) > code { background: #f1f5f9; padding: 0.15em 0.4em; border-radius: 4px; color: var(--accent); }
+    .diagram { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 2rem; margin: 2rem 0; text-align: center; }
+    .diagram svg { max-width: 100%; height: auto; }
+    .card-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin: 1.5rem 0; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1.25rem 1.5rem; }
+    .card h4 { font-weight: 600; margin-bottom: 0.5rem; }
+    .do-card { border-left: 4px solid #22c55e; }
+    .dont-card { border-left: 4px solid #ef4444; }
+    .nav { display: flex; justify-content: space-between; padding: 1rem 0; border-top: 1px solid var(--border); margin-top: 3rem; font-size: 0.95rem; }
+    .nav a { color: var(--accent); text-decoration: none; font-weight: 500; }
+    .nav a:hover { text-decoration: underline; }
+    .top-nav { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border); }
+    .top-nav a { color: var(--text-light); text-decoration: none; font-size: 0.85rem; padding: 0.3rem 0.7rem; border-radius: 6px; background: #f1f5f9; transition: all 0.2s; }
+    .top-nav a:hover, .top-nav a.active { background: var(--accent); color: #fff; }
+    .key-takeaway { background: var(--accent-light); border-radius: 12px; padding: 1.5rem 2rem; margin: 2rem 0; }
+    .key-takeaway h3 { color: var(--accent); margin-top: 0; }
+    .comment { color: #6a9955; }
+    .keyword { color: #c586c0; }
+    .function { color: #dcdcaa; }
+    .string { color: #ce9178; }
+    .component { color: #4ec9b0; }
+    .tag { color: #569cd6; }
+    .attr { color: #9cdcfe; }
+    .code-label { display: inline-block; font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; padding: 0.2rem 0.6rem; border-radius: 6px; margin-bottom: 0.5rem; }
+    .code-label.before { background: #fee2e2; color: #dc2626; }
+    .code-label.after { background: #dcfce7; color: #16a34a; }
+    .note-box { background: #f5f3ff; border: 1px solid #ddd6fe; border-radius: 12px; padding: 1.25rem 1.75rem; margin: 1.5rem 0; }
+    .note-box p { margin-bottom: 0; }
+    @media (max-width: 700px) { .card-row { grid-template-columns: 1fr; } }
+    @media print { body { max-width: 100%; } .top-nav, .nav { display: none; } }
+  </style>
+</head>
+<body>
+
+  <nav class="top-nav">
+    <a href="index.html">Index</a>
+    <a href="01-compound-components.html">Compound Components</a>
+    <a href="02-render-props.html" class="active">Render Props</a>
+    <a href="03-higher-order-components.html">HOC</a>
+    <a href="04-custom-hooks.html">Custom Hooks</a>
+    <a href="05-container-presentational.html">Container/Presentational</a>
+    <a href="06-state-reducer.html">State Reducer</a>
+    <a href="07-memoization.html">Memoization</a>
+    <a href="08-code-splitting.html">Code Splitting</a>
+    <a href="09-context-module.html">Context Module</a>
+    <a href="10-lazy-loading.html">Lazy Loading</a>
+    <a href="11-slot-pattern.html">Slot Pattern</a>
+  </nav>
+
+  <span class="badge">Component Pattern</span>
+  <h1>Render Props</h1>
+  <p class="subtitle">Share behavior between components using a prop whose value is a function</p>
+
+  <!-- ─── PROBLEM ─── -->
+  <h2>The Problem</h2>
+
+  <div class="problem-box">
+    <h3>Duplicated Logic Across Components</h3>
+    <p>
+      You have reusable logic &mdash; mouse tracking, data fetching, form handling, intersection
+      observation &mdash; that multiple components need. Without a sharing mechanism, you copy
+      and paste the same <code>useState</code> + <code>useEffect</code> setup into every
+      component that needs it. The logic and the UI become tightly coupled.
+    </p>
+  </div>
+
+  <span class="code-label before">Before &mdash; Duplicated Mouse Tracking</span>
+  <pre><code><span class="comment">// Component A: duplicates mouse tracking logic</span>
+<span class="keyword">function</span> <span class="component">MouseCoordinates</span>() {
+  <span class="keyword">const</span> [<span class="attr">position</span>, <span class="function">setPosition</span>] = <span class="function">useState</span>({ <span class="attr">x</span>: 0, <span class="attr">y</span>: 0 });
+
+  <span class="function">useEffect</span>(() =&gt; {
+    <span class="keyword">const</span> <span class="function">handleMove</span> = (<span class="attr">e</span>) =&gt; {
+      <span class="function">setPosition</span>({ <span class="attr">x</span>: <span class="attr">e</span>.<span class="attr">clientX</span>, <span class="attr">y</span>: <span class="attr">e</span>.<span class="attr">clientY</span> });
+    };
+    window.<span class="function">addEventListener</span>(<span class="string">'mousemove'</span>, <span class="function">handleMove</span>);
+    <span class="keyword">return</span> () =&gt; window.<span class="function">removeEventListener</span>(<span class="string">'mousemove'</span>, <span class="function">handleMove</span>);
+  }, []);
+
+  <span class="keyword">return</span> (
+    &lt;<span class="tag">p</span>&gt;Mouse: {<span class="attr">position</span>.<span class="attr">x</span>}, {<span class="attr">position</span>.<span class="attr">y</span>}&lt;/<span class="tag">p</span>&gt;
+  );
+}
+
+<span class="comment">// Component B: exact same logic, different UI</span>
+<span class="keyword">function</span> <span class="component">MouseTrail</span>() {
+  <span class="keyword">const</span> [<span class="attr">position</span>, <span class="function">setPosition</span>] = <span class="function">useState</span>({ <span class="attr">x</span>: 0, <span class="attr">y</span>: 0 });
+
+  <span class="function">useEffect</span>(() =&gt; {
+    <span class="keyword">const</span> <span class="function">handleMove</span> = (<span class="attr">e</span>) =&gt; {
+      <span class="function">setPosition</span>({ <span class="attr">x</span>: <span class="attr">e</span>.<span class="attr">clientX</span>, <span class="attr">y</span>: <span class="attr">e</span>.<span class="attr">clientY</span> });
+    };
+    window.<span class="function">addEventListener</span>(<span class="string">'mousemove'</span>, <span class="function">handleMove</span>);
+    <span class="keyword">return</span> () =&gt; window.<span class="function">removeEventListener</span>(<span class="string">'mousemove'</span>, <span class="function">handleMove</span>);
+  }, []);
+
+  <span class="keyword">return</span> (
+    &lt;<span class="tag">div</span>
+      <span class="attr">style</span>={{
+        <span class="attr">width</span>: 20, <span class="attr">height</span>: 20, <span class="attr">borderRadius</span>: <span class="string">'50%'</span>,
+        <span class="attr">background</span>: <span class="string">'#8b5cf6'</span>,
+        <span class="attr">position</span>: <span class="string">'fixed'</span>,
+        <span class="attr">left</span>: <span class="attr">position</span>.<span class="attr">x</span> - 10,
+        <span class="attr">top</span>: <span class="attr">position</span>.<span class="attr">y</span> - 10,
+      }}
+    /&gt;
+  );
+}</code></pre>
+
+  <p>
+    The mouse-tracking logic is identical in both components. If we need to track the mouse in a
+    third component, we copy it again. Bugs fixed in one copy may not be fixed in others. The
+    logic cannot be tested in isolation from the UI.
+  </p>
+
+  <!-- ─── DIAGRAM ─── -->
+  <h2>How It Works</h2>
+
+  <div class="diagram">
+    <svg viewBox="0 0 760 380" xmlns="http://www.w3.org/2000/svg" font-family="Inter, sans-serif">
+      <defs>
+        <marker id="arrowhead" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="#8b5cf6"/>
+        </marker>
+      </defs>
+
+      <!-- Provider component -->
+      <rect x="230" y="20" width="300" height="100" rx="16" fill="#f5f3ff" stroke="#8b5cf6" stroke-width="2"/>
+      <text x="380" y="48" text-anchor="middle" fill="#8b5cf6" font-size="15" font-weight="700">&lt;MouseTracker&gt;</text>
+      <text x="380" y="70" text-anchor="middle" fill="#64748b" font-size="12">Logic + State</text>
+      <rect x="290" y="82" width="180" height="26" rx="6" fill="#8b5cf6" opacity="0.15"/>
+      <text x="380" y="100" text-anchor="middle" fill="#8b5cf6" font-size="12" font-weight="600">{ x, y } = state</text>
+
+      <!-- Arrow down to render function -->
+      <line x1="380" y1="120" x2="380" y2="165" stroke="#8b5cf6" stroke-width="2" marker-end="url(#arrowhead)"/>
+
+      <!-- Render function box -->
+      <rect x="270" y="168" width="220" height="40" rx="20" fill="#8b5cf6"/>
+      <text x="380" y="193" text-anchor="middle" fill="#fff" font-size="13" font-weight="600">render(state) / children(state)</text>
+
+      <!-- Fan-out arrows -->
+      <line x1="310" y1="208" x2="130" y2="270" stroke="#8b5cf6" stroke-width="2" stroke-dasharray="6,3" marker-end="url(#arrowhead)"/>
+      <line x1="380" y1="208" x2="380" y2="270" stroke="#8b5cf6" stroke-width="2" stroke-dasharray="6,3" marker-end="url(#arrowhead)"/>
+      <line x1="450" y1="208" x2="630" y2="270" stroke="#8b5cf6" stroke-width="2" stroke-dasharray="6,3" marker-end="url(#arrowhead)"/>
+
+      <!-- Consumer A -->
+      <rect x="40" y="272" width="180" height="66" rx="12" fill="#fff" stroke="#e2e8f0" stroke-width="1.5"/>
+      <text x="130" y="298" text-anchor="middle" fill="#1e293b" font-size="13" font-weight="600">Coordinates UI</text>
+      <text x="130" y="320" text-anchor="middle" fill="#64748b" font-size="11">Shows x, y as text</text>
+
+      <!-- Consumer B -->
+      <rect x="290" y="272" width="180" height="66" rx="12" fill="#fff" stroke="#e2e8f0" stroke-width="1.5"/>
+      <text x="380" y="298" text-anchor="middle" fill="#1e293b" font-size="13" font-weight="600">Cursor Trail UI</text>
+      <text x="380" y="320" text-anchor="middle" fill="#64748b" font-size="11">Circle following mouse</text>
+
+      <!-- Consumer C -->
+      <rect x="540" y="272" width="180" height="66" rx="12" fill="#fff" stroke="#e2e8f0" stroke-width="1.5"/>
+      <text x="630" y="298" text-anchor="middle" fill="#1e293b" font-size="13" font-weight="600">Heatmap UI</text>
+      <text x="630" y="320" text-anchor="middle" fill="#64748b" font-size="11">Visualizes mouse density</text>
+
+      <!-- Label -->
+      <text x="380" y="370" text-anchor="middle" fill="#64748b" font-size="13" font-style="italic">Same logic, different renderings &mdash; the consumer decides what to render</text>
+    </svg>
+  </div>
+
+  <!-- ─── SOLUTION ─── -->
+  <h2>The Solution</h2>
+
+  <div class="solution-box">
+    <h3>Render Prop Pattern</h3>
+    <p>
+      Extract the reusable logic into a component that accepts a <strong>function as a prop</strong>
+      (or as <code>children</code>). The component calls that function with the shared state,
+      letting the consumer decide what to render. Logic is written once, UI is flexible.
+    </p>
+  </div>
+
+  <span class="code-label after">After &mdash; MouseTracker with Render Prop</span>
+  <pre><code><span class="keyword">import</span> { useState, useEffect } <span class="keyword">from</span> <span class="string">'react'</span>;
+
+<span class="comment">// Reusable logic component — no UI opinion</span>
+<span class="keyword">function</span> <span class="component">MouseTracker</span>({ <span class="attr">children</span> }) {
+  <span class="keyword">const</span> [<span class="attr">position</span>, <span class="function">setPosition</span>] = <span class="function">useState</span>({ <span class="attr">x</span>: 0, <span class="attr">y</span>: 0 });
+
+  <span class="function">useEffect</span>(() =&gt; {
+    <span class="keyword">const</span> <span class="function">handleMove</span> = (<span class="attr">e</span>) =&gt; {
+      <span class="function">setPosition</span>({ <span class="attr">x</span>: <span class="attr">e</span>.<span class="attr">clientX</span>, <span class="attr">y</span>: <span class="attr">e</span>.<span class="attr">clientY</span> });
+    };
+    window.<span class="function">addEventListener</span>(<span class="string">'mousemove'</span>, <span class="function">handleMove</span>);
+    <span class="keyword">return</span> () =&gt; window.<span class="function">removeEventListener</span>(<span class="string">'mousemove'</span>, <span class="function">handleMove</span>);
+  }, []);
+
+  <span class="comment">// Call children as a function, passing the state</span>
+  <span class="keyword">return</span> <span class="function">children</span>(<span class="attr">position</span>);
+}</code></pre>
+
+  <span class="code-label after">After &mdash; Both Components, Zero Duplication</span>
+  <pre><code><span class="comment">// Component A: coordinates display</span>
+<span class="keyword">function</span> <span class="component">App</span>() {
+  <span class="keyword">return</span> (
+    &lt;<span class="component">MouseTracker</span>&gt;
+      {({ <span class="attr">x</span>, <span class="attr">y</span> }) =&gt; (
+        &lt;<span class="tag">p</span>&gt;Mouse: {<span class="attr">x</span>}, {<span class="attr">y</span>}&lt;/<span class="tag">p</span>&gt;
+      )}
+    &lt;/<span class="component">MouseTracker</span>&gt;
+  );
+}
+
+<span class="comment">// Component B: cursor trail — same logic, different UI</span>
+<span class="keyword">function</span> <span class="component">TrailApp</span>() {
+  <span class="keyword">return</span> (
+    &lt;<span class="component">MouseTracker</span>&gt;
+      {({ <span class="attr">x</span>, <span class="attr">y</span> }) =&gt; (
+        &lt;<span class="tag">div</span>
+          <span class="attr">style</span>={{
+            <span class="attr">width</span>: 20, <span class="attr">height</span>: 20,
+            <span class="attr">borderRadius</span>: <span class="string">'50%'</span>,
+            <span class="attr">background</span>: <span class="string">'#8b5cf6'</span>,
+            <span class="attr">position</span>: <span class="string">'fixed'</span>,
+            <span class="attr">left</span>: <span class="attr">x</span> - 10,
+            <span class="attr">top</span>: <span class="attr">y</span> - 10,
+          }}
+        /&gt;
+      )}
+    &lt;/<span class="component">MouseTracker</span>&gt;
+  );
+}
+
+<span class="comment">// You can also use a "render" prop instead of children:</span>
+<span class="comment">// &lt;MouseTracker render={({ x, y }) =&gt; &lt;p&gt;{x}, {y}&lt;/p&gt;} /&gt;</span></code></pre>
+
+  <!-- ─── HISTORICAL NOTE ─── -->
+  <div class="note-box">
+    <h3>Historical Context</h3>
+    <p>
+      While <strong>custom hooks</strong> have largely replaced render props for logic sharing,
+      render props are still valuable for <em>component composition</em> and
+      <em>inversion of control</em>. Libraries like <strong>React Router</strong>,
+      <strong>Downshift</strong>, and <strong>Formik</strong> used this pattern extensively.
+      Understanding render props deepens your understanding of React's composition model and
+      helps you read older codebases.
+    </p>
+  </div>
+
+  <!-- ─── WHEN TO USE ─── -->
+  <h2>When to Use &amp; When Not to Use</h2>
+
+  <div class="card-row">
+    <div class="card do-card">
+      <h4>When to Use</h4>
+      <ul>
+        <li>Sharing behavior with completely flexible rendering</li>
+        <li>Building component libraries where consumers control the UI</li>
+        <li>When you need to share logic <em>and</em> wrap JSX around the consumer's output</li>
+        <li>Dynamic composition at render time (the function can vary)</li>
+      </ul>
+    </div>
+    <div class="card dont-card">
+      <h4>When NOT to Use</h4>
+      <ul>
+        <li>When a custom hook would be simpler (most cases today)</li>
+        <li>When nesting multiple render props creates "callback hell"</li>
+        <li>For simple state sharing where Context is more appropriate</li>
+        <li>When the shared logic doesn't need to wrap or inject into the UI tree</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ─── COMPARISON ─── -->
+  <h2>Render Props vs. Custom Hooks</h2>
+
+  <div class="card-row">
+    <div class="card">
+      <h4>Render Props</h4>
+      <ul>
+        <li>Can wrap the consumer's JSX in additional elements</li>
+        <li>Works in class components</li>
+        <li>Can lead to nesting ("wrapper hell")</li>
+        <li>The provider is a component in the tree</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4>Custom Hooks</h4>
+      <ul>
+        <li>Cleaner, flatter code</li>
+        <li>Easier to compose multiple hooks</li>
+        <li>Only works in function components</li>
+        <li>Cannot wrap JSX — purely logic</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ─── KEY TAKEAWAY ─── -->
+  <div class="key-takeaway">
+    <h3>Key Takeaway</h3>
+    <p>
+      Render Props invert control &mdash; the component with the logic doesn't decide what
+      to render, the consumer does. This creates maximum flexibility: one piece of logic,
+      unlimited visual representations.
+    </p>
+  </div>
+
+  <nav class="nav">
+    <a href="01-compound-components.html">&larr; Prev: Compound Components</a>
+    <a href="03-higher-order-components.html">Next: Higher-Order Components &rarr;</a>
+  </nav>
+
+</body>
+</html>

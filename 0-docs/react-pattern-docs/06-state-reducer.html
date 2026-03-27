@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>State Reducer Pattern — React Patterns</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --accent: #059669;
+  --accent-light: #ecfdf5;
+  --problem-bg: #fff7ed;
+  --problem-border: #fb923c;
+  --solution-bg: #f0fdf4;
+  --solution-border: #4ade80;
+  --code-bg: #1e1e2e;
+  --code-text: #cdd6f4;
+  --text: #1e293b;
+  --text-light: #64748b;
+  --surface: #ffffff;
+  --border: #e2e8f0;
+  --font: 'Inter', -apple-system, sans-serif;
+  --mono: 'Fira Code', 'Consolas', monospace;
+}
+body { font-family: var(--font); color: var(--text); line-height: 1.7; max-width: 960px; margin: 0 auto; padding: 2rem; background: #fafbfc; }
+h1 { font-size: 2.5rem; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 0.5rem; }
+h2 { font-size: 1.5rem; font-weight: 700; margin: 2.5rem 0 1rem; color: var(--accent); }
+h3 { font-size: 1.15rem; font-weight: 600; margin: 1.5rem 0 0.75rem; }
+p, li { font-size: 1.05rem; margin-bottom: 0.75rem; }
+ul { padding-left: 1.5rem; }
+.badge { display: inline-block; background: var(--accent); color: #fff; font-size: 0.8rem; font-weight: 600; padding: 0.25rem 0.75rem; border-radius: 999px; margin-bottom: 1rem; letter-spacing: 0.05em; text-transform: uppercase; }
+.subtitle { font-size: 1.25rem; color: var(--text-light); font-weight: 400; margin-bottom: 2rem; }
+.problem-box, .solution-box { padding: 1.5rem 2rem; border-radius: 12px; margin: 1.5rem 0; border-left: 4px solid; }
+.problem-box { background: var(--problem-bg); border-color: var(--problem-border); }
+.problem-box h3::before { content: '\26A0 '; }
+.solution-box { background: var(--solution-bg); border-color: var(--solution-border); }
+.solution-box h3::before { content: '\2726 '; }
+pre { background: var(--code-bg); color: var(--code-text); padding: 1.5rem; border-radius: 10px; overflow-x: auto; margin: 1rem 0; font-size: 0.92rem; line-height: 1.6; }
+code { font-family: var(--mono); font-size: 0.9em; }
+:not(pre) > code { background: #f1f5f9; padding: 0.15em 0.4em; border-radius: 4px; color: var(--accent); }
+.diagram { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 2rem; margin: 2rem 0; text-align: center; }
+.diagram svg { max-width: 100%; height: auto; }
+.card-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin: 1.5rem 0; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1.25rem 1.5rem; }
+.card h4 { font-weight: 600; margin-bottom: 0.5rem; }
+.do-card { border-left: 4px solid #22c55e; }
+.dont-card { border-left: 4px solid #ef4444; }
+.nav { display: flex; justify-content: space-between; padding: 1rem 0; border-top: 1px solid var(--border); margin-top: 3rem; font-size: 0.95rem; }
+.nav a { color: var(--accent); text-decoration: none; font-weight: 500; }
+.nav a:hover { text-decoration: underline; }
+.top-nav { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border); }
+.top-nav a { color: var(--text-light); text-decoration: none; font-size: 0.85rem; padding: 0.3rem 0.7rem; border-radius: 6px; background: #f1f5f9; transition: all 0.2s; }
+.top-nav a:hover, .top-nav a.active { background: var(--accent); color: #fff; }
+.key-takeaway { background: var(--accent-light); border-radius: 12px; padding: 1.5rem 2rem; margin: 2rem 0; }
+.key-takeaway h3 { color: var(--accent); margin-top: 0; }
+.comment { color: #6a9955; }
+.keyword { color: #c586c0; }
+.function { color: #dcdcaa; }
+.string { color: #ce9178; }
+.component { color: #4ec9b0; }
+.tag { color: #569cd6; }
+.attr { color: #9cdcfe; }
+@media print { body { max-width: 100%; } .top-nav, .nav { display: none; } }
+</style>
+</head>
+<body>
+
+<nav class="top-nav">
+  <a href="index.html">Home</a>
+  <a href="01-compound-components.html">Compound Components</a>
+  <a href="02-render-props.html">Render Props</a>
+  <a href="03-higher-order-components.html">HOCs</a>
+  <a href="04-custom-hooks.html">Custom Hooks</a>
+  <a href="05-container-presentational.html">Container/Presentational</a>
+  <a href="06-state-reducer.html" class="active">State Reducer</a>
+  <a href="07-memoization.html">Memoization</a>
+  <a href="08-code-splitting.html">Code Splitting</a>
+  <a href="09-context-module.html">Context Module</a>
+  <a href="10-lazy-loading.html">Lazy Loading</a>
+  <a href="11-slot-pattern.html">Slot Pattern</a>
+</nav>
+
+<span class="badge">Logic Pattern</span>
+<h1>State Reducer Pattern</h1>
+<p class="subtitle">Give component consumers full control over state changes</p>
+
+<h2>The Problem</h2>
+
+<div class="problem-box">
+  <h3>The Endless Props Trap</h3>
+  <p>You build a reusable <code>Toggle</code> component. Then one consumer needs a toggle that can only be toggled 4 times. Another needs a toggle that can't be turned off. A third needs one that resets after 10 seconds. You keep adding one-off props until your component is drowning in special cases.</p>
+</div>
+
+<p>Here's what this looks like in practice &mdash; a Toggle component that has grown out of control:</p>
+
+<pre><code><span class="comment">// The Toggle component that tries to handle every use case via props</span>
+<span class="keyword">function</span> <span class="component">Toggle</span>({
+  <span class="attr">onToggle</span>,
+  <span class="attr">maxClicks</span>,          <span class="comment">// Consumer A needs this</span>
+  <span class="attr">preventOff</span>,         <span class="comment">// Consumer B needs this</span>
+  <span class="attr">preventOn</span>,          <span class="comment">// Consumer C needs this</span>
+  <span class="attr">resetAfter</span>,         <span class="comment">// Consumer D needs this</span>
+  <span class="attr">confirmBeforeOff</span>,   <span class="comment">// Consumer E needs this</span>
+  <span class="attr">disableAfterFirst</span>,  <span class="comment">// Consumer F needs this</span>
+  <span class="attr">cooldownMs</span>,         <span class="comment">// Consumer G needs this</span>
+  <span class="comment">// ...and the list keeps growing</span>
+}) {
+  <span class="keyword">const</span> [<span class="attr">on</span>, <span class="function">setOn</span>] = <span class="function">useState</span>(<span class="keyword">false</span>);
+  <span class="keyword">const</span> [<span class="attr">clickCount</span>, <span class="function">setClickCount</span>] = <span class="function">useState</span>(0);
+
+  <span class="keyword">function</span> <span class="function">handleToggle</span>() {
+    <span class="keyword">if</span> (maxClicks && clickCount >= maxClicks) <span class="keyword">return</span>;
+    <span class="keyword">if</span> (preventOff && on) <span class="keyword">return</span>;
+    <span class="keyword">if</span> (preventOn && !on) <span class="keyword">return</span>;
+    <span class="keyword">if</span> (confirmBeforeOff && on && !<span class="function">window.confirm</span>(<span class="string">'Turn off?'</span>)) <span class="keyword">return</span>;
+    <span class="comment">// ...more and more conditional logic</span>
+
+    <span class="function">setOn</span>(prev => !prev);
+    <span class="function">setClickCount</span>(c => c + 1);
+    <span class="function">onToggle</span>?.(!on);
+  }
+
+  <span class="keyword">return</span> &lt;<span class="tag">button</span> <span class="attr">onClick</span>={<span class="function">handleToggle</span>}&gt;{on ? <span class="string">'ON'</span> : <span class="string">'OFF'</span>}&lt;/<span class="tag">button</span>&gt;;
+}</code></pre>
+
+<p>Every new consumer requirement means modifying the component's internals. This violates the Open-Closed Principle and makes the component fragile and hard to test.</p>
+
+<h2>How It Works</h2>
+
+<div class="diagram">
+  <svg viewBox="0 0 800 320" xmlns="http://www.w3.org/2000/svg" font-family="Inter, sans-serif">
+    <!-- User Action -->
+    <rect x="20" y="130" width="140" height="60" rx="10" fill="#e2e8f0" stroke="#94a3b8" stroke-width="2"/>
+    <text x="90" y="165" text-anchor="middle" font-size="14" font-weight="600" fill="#1e293b">User Action</text>
+    <text x="90" y="178" text-anchor="middle" font-size="11" fill="#64748b">(click, type, etc.)</text>
+
+    <!-- Arrow 1 -->
+    <line x1="160" y1="160" x2="210" y2="160" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrow)"/>
+
+    <!-- Internal Reducer -->
+    <rect x="210" y="120" width="160" height="80" rx="10" fill="#ecfdf5" stroke="#059669" stroke-width="2"/>
+    <text x="290" y="152" text-anchor="middle" font-size="13" font-weight="600" fill="#059669">Internal Reducer</text>
+    <text x="290" y="170" text-anchor="middle" font-size="11" fill="#64748b">Computes default</text>
+    <text x="290" y="184" text-anchor="middle" font-size="11" fill="#64748b">next state</text>
+
+    <!-- Arrow 2 -->
+    <line x1="370" y1="160" x2="420" y2="160" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrow)"/>
+
+    <!-- Consumer's State Reducer (the interceptor) -->
+    <rect x="420" y="90" width="180" height="140" rx="12" fill="#fff7ed" stroke="#fb923c" stroke-width="2.5" stroke-dasharray="6,3"/>
+    <text x="510" y="120" text-anchor="middle" font-size="13" font-weight="700" fill="#ea580c">Consumer's</text>
+    <text x="510" y="138" text-anchor="middle" font-size="13" font-weight="700" fill="#ea580c">State Reducer</text>
+    <line x1="440" y1="150" x2="580" y2="150" stroke="#fdba74" stroke-width="1"/>
+    <text x="510" y="170" text-anchor="middle" font-size="11" fill="#64748b">Can MODIFY changes</text>
+    <text x="510" y="186" text-anchor="middle" font-size="11" fill="#64748b">Can BLOCK changes</text>
+    <text x="510" y="202" text-anchor="middle" font-size="11" fill="#64748b">Can ADD new changes</text>
+
+    <!-- Arrow label -->
+    <text x="510" y="78" text-anchor="middle" font-size="11" font-weight="600" fill="#ea580c">Intercepts &amp; overrides</text>
+    <path d="M510 82 L510 90" stroke="#ea580c" stroke-width="1.5" marker-end="url(#arrowOrange)"/>
+
+    <!-- Arrow 3 -->
+    <line x1="600" y1="160" x2="650" y2="160" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrow)"/>
+
+    <!-- Final State -->
+    <rect x="650" y="130" width="130" height="60" rx="10" fill="#059669" stroke="#047857" stroke-width="2"/>
+    <text x="715" y="158" text-anchor="middle" font-size="14" font-weight="700" fill="#ffffff">Final State</text>
+    <text x="715" y="175" text-anchor="middle" font-size="11" fill="#d1fae5">Applied to UI</text>
+
+    <!-- Arrow markers -->
+    <defs>
+      <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+        <path d="M 0 0 L 10 5 L 0 10 z" fill="#94a3b8"/>
+      </marker>
+      <marker id="arrowOrange" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+        <path d="M 0 0 L 10 5 L 0 10 z" fill="#ea580c"/>
+      </marker>
+    </defs>
+
+    <!-- Bottom label -->
+    <text x="400" y="280" text-anchor="middle" font-size="12" fill="#64748b">The consumer's reducer wraps the internal reducer, giving full control over state transitions</text>
+    <text x="400" y="300" text-anchor="middle" font-size="12" font-weight="600" fill="#059669">Inversion of Control: the consumer decides what happens</text>
+  </svg>
+</div>
+
+<h2>The Solution</h2>
+
+<div class="solution-box">
+  <h3>Accept a <code>stateReducer</code> Prop</h3>
+  <p>Instead of adding a new prop for every use case, accept a single <code>stateReducer</code> function. The component computes its default next state, then passes it through the consumer's reducer, which can modify or block the change. One prop to rule them all.</p>
+</div>
+
+<h3>Step 1: Build the <code>useToggle</code> Hook with State Reducer</h3>
+
+<pre><code><span class="comment">// Define action types so consumers can react to specific changes</span>
+<span class="keyword">const</span> actionTypes = {
+  <span class="attr">TOGGLE</span>: <span class="string">'TOGGLE'</span>,
+  <span class="attr">RESET</span>: <span class="string">'RESET'</span>,
+};
+
+<span class="comment">// The internal (default) reducer — handles normal behavior</span>
+<span class="keyword">function</span> <span class="function">toggleReducer</span>(state, action) {
+  <span class="keyword">switch</span> (action.type) {
+    <span class="keyword">case</span> actionTypes.<span class="attr">TOGGLE</span>:
+      <span class="keyword">return</span> { <span class="attr">on</span>: !state.on };
+    <span class="keyword">case</span> actionTypes.<span class="attr">RESET</span>:
+      <span class="keyword">return</span> { <span class="attr">on</span>: action.initialState };
+    <span class="keyword">default</span>:
+      <span class="keyword">throw new</span> Error(<span class="string">`Unhandled type: </span>${action.type}<span class="string">`</span>);
+  }
+}
+
+<span class="comment">// The hook that implements the state reducer pattern</span>
+<span class="keyword">function</span> <span class="function">useToggle</span>({
+  initialOn = <span class="keyword">false</span>,
+  <span class="comment">// The consumer can pass their own reducer to intercept changes</span>
+  reducer = toggleReducer,
+} = {}) {
+  <span class="keyword">const</span> { current: initialState } = <span class="function">useRef</span>({ <span class="attr">on</span>: initialOn });
+
+  <span class="comment">// Use the consumer's reducer (which defaults to the internal one)</span>
+  <span class="keyword">const</span> [state, <span class="function">dispatch</span>] = <span class="function">useReducer</span>(reducer, initialState);
+
+  <span class="keyword">const</span> <span class="function">toggle</span> = () => <span class="function">dispatch</span>({ <span class="attr">type</span>: actionTypes.<span class="attr">TOGGLE</span> });
+  <span class="keyword">const</span> <span class="function">reset</span> = () => <span class="function">dispatch</span>({ <span class="attr">type</span>: actionTypes.<span class="attr">RESET</span>, initialState });
+
+  <span class="keyword">return</span> { <span class="attr">on</span>: state.on, toggle, reset, <span class="function">dispatch</span> };
+}
+
+<span class="comment">// Export action types so consumers can use them</span>
+useToggle.actionTypes = actionTypes;
+useToggle.reducer = toggleReducer;</code></pre>
+
+<h3>Step 2: Consumer Limits Toggles to 4 Clicks</h3>
+
+<pre><code><span class="keyword">function</span> <span class="component">App</span>() {
+  <span class="keyword">const</span> [clickCount, <span class="function">setClickCount</span>] = <span class="function">useState</span>(0);
+  <span class="keyword">const</span> tooManyClicks = clickCount >= 4;
+
+  <span class="comment">// The consumer's custom reducer wraps the default one</span>
+  <span class="keyword">function</span> <span class="function">toggleStateReducer</span>(state, action) {
+    <span class="comment">// Call the default reducer to get what WOULD happen</span>
+    <span class="keyword">const</span> changes = useToggle.<span class="function">reducer</span>(state, action);
+
+    <span class="comment">// Then decide: allow it, modify it, or block it</span>
+    <span class="keyword">if</span> (action.type === useToggle.actionTypes.<span class="attr">TOGGLE</span> && tooManyClicks) {
+      <span class="comment">// Block the change — return current state unchanged</span>
+      <span class="keyword">return</span> state;
+    }
+
+    <span class="comment">// Otherwise, allow the default behavior</span>
+    <span class="keyword">return</span> changes;
+  }
+
+  <span class="keyword">const</span> { on, toggle, reset } = <span class="function">useToggle</span>({
+    <span class="attr">reducer</span>: toggleStateReducer,
+  });
+
+  <span class="keyword">return</span> (
+    &lt;<span class="tag">div</span>&gt;
+      &lt;<span class="tag">button</span>
+        <span class="attr">onClick</span>={() => {
+          <span class="function">toggle</span>();
+          <span class="function">setClickCount</span>(c => c + 1);
+        }}
+        <span class="attr">disabled</span>={tooManyClicks}
+      &gt;
+        {on ? <span class="string">'ON'</span> : <span class="string">'OFF'</span>} ({clickCount} clicks)
+      &lt;/<span class="tag">button</span>&gt;
+
+      &lt;<span class="tag">button</span> <span class="attr">onClick</span>={() => { <span class="function">reset</span>(); <span class="function">setClickCount</span>(0); }}&gt;
+        Reset
+      &lt;/<span class="tag">button</span>&gt;
+
+      {tooManyClicks &amp;&amp; (
+        &lt;<span class="tag">p</span>&gt;<span class="string">You've used all 4 toggles. Reset to continue.</span>&lt;/<span class="tag">p</span>&gt;
+      )}
+    &lt;/<span class="tag">div</span>&gt;
+  );
+}</code></pre>
+
+<p>Notice how the consumer didn't need a <code>maxClicks</code> prop. They simply wrote a reducer that intercepts the <code>TOGGLE</code> action and blocks it when the limit is reached. Any other consumer could write a completely different reducer for their own needs &mdash; without touching the <code>useToggle</code> source code.</p>
+
+<h2>Real-World Inspiration</h2>
+
+<p>This pattern was popularized by <strong>Kent C. Dodds</strong> and is used extensively in the <a href="https://github.com/downshift-js/downshift" style="color: var(--accent);">Downshift</a> library &mdash; a highly flexible autocomplete/select component. Downshift uses a state reducer to let consumers customize dropdown behavior, selection logic, and keyboard interactions without forking the library.</p>
+
+<h2>When to Use</h2>
+
+<div class="card-row">
+  <div class="card do-card">
+    <h4>Use When</h4>
+    <ul>
+      <li>Building highly reusable components or hooks</li>
+      <li>Consumers need to customize state transitions</li>
+      <li>You find yourself adding many boolean/callback props for edge cases</li>
+      <li>Publishing a library where you can't predict every use case</li>
+    </ul>
+  </div>
+  <div class="card dont-card">
+    <h4>Avoid When</h4>
+    <ul>
+      <li>The component is simple with few states</li>
+      <li>It's an internal component not meant for reuse</li>
+      <li>A simple callback prop covers all known use cases</li>
+      <li>You have fewer than 2-3 consumers with different needs</li>
+    </ul>
+  </div>
+</div>
+
+<div class="key-takeaway">
+  <h3>Key Takeaway</h3>
+  <p>The State Reducer pattern is about <strong>inversion of control</strong> &mdash; instead of anticipating every use case, you hand control to the consumer. It's the ultimate flexibility pattern. Your component defines the <em>default</em> behavior; the consumer decides what actually happens.</p>
+</div>
+
+<nav class="nav">
+  <a href="05-container-presentational.html">&larr; Container / Presentational</a>
+  <a href="07-memoization.html">Memoization &rarr;</a>
+</nav>
+
+</body>
+</html>

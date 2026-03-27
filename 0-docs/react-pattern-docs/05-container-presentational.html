@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Container &amp; Presentational — React Patterns</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --accent: #14b8a6;
+      --accent-light: #f0fdfa;
+      --problem-bg: #fff7ed;
+      --problem-border: #fb923c;
+      --solution-bg: #f0fdf4;
+      --solution-border: #4ade80;
+      --code-bg: #1e1e2e;
+      --code-text: #cdd6f4;
+      --text: #1e293b;
+      --text-light: #64748b;
+      --surface: #ffffff;
+      --border: #e2e8f0;
+      --font: 'Inter', -apple-system, sans-serif;
+      --mono: 'Fira Code', 'Consolas', monospace;
+    }
+    body { font-family: var(--font); color: var(--text); line-height: 1.7; max-width: 960px; margin: 0 auto; padding: 2rem; background: #fafbfc; }
+    h1 { font-size: 2.5rem; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 0.5rem; }
+    h2 { font-size: 1.5rem; font-weight: 700; margin: 2.5rem 0 1rem; color: var(--accent); }
+    h3 { font-size: 1.15rem; font-weight: 600; margin: 1.5rem 0 0.75rem; }
+    p, li { font-size: 1.05rem; margin-bottom: 0.75rem; }
+    ul { padding-left: 1.5rem; }
+    .badge { display: inline-block; background: var(--accent); color: #fff; font-size: 0.8rem; font-weight: 600; padding: 0.25rem 0.75rem; border-radius: 999px; margin-bottom: 1rem; letter-spacing: 0.05em; text-transform: uppercase; }
+    .subtitle { font-size: 1.25rem; color: var(--text-light); font-weight: 400; margin-bottom: 2rem; }
+    .problem-box, .solution-box { padding: 1.5rem 2rem; border-radius: 12px; margin: 1.5rem 0; border-left: 4px solid; }
+    .problem-box { background: var(--problem-bg); border-color: var(--problem-border); }
+    .problem-box h3::before { content: '\26A0 '; }
+    .solution-box { background: var(--solution-bg); border-color: var(--solution-border); }
+    .solution-box h3::before { content: '\2726 '; }
+    pre { background: var(--code-bg); color: var(--code-text); padding: 1.5rem; border-radius: 10px; overflow-x: auto; margin: 1rem 0; font-size: 0.92rem; line-height: 1.6; }
+    code { font-family: var(--mono); font-size: 0.9em; }
+    :not(pre) > code { background: #f1f5f9; padding: 0.15em 0.4em; border-radius: 4px; color: var(--accent); }
+    .diagram { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 2rem; margin: 2rem 0; text-align: center; }
+    .diagram svg { max-width: 100%; height: auto; }
+    .card-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin: 1.5rem 0; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1.25rem 1.5rem; }
+    .card h4 { font-weight: 600; margin-bottom: 0.5rem; }
+    .do-card { border-left: 4px solid #22c55e; }
+    .dont-card { border-left: 4px solid #ef4444; }
+    .nav { display: flex; justify-content: space-between; padding: 1rem 0; border-top: 1px solid var(--border); margin-top: 3rem; font-size: 0.95rem; }
+    .nav a { color: var(--accent); text-decoration: none; font-weight: 500; }
+    .nav a:hover { text-decoration: underline; }
+    .top-nav { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border); }
+    .top-nav a { color: var(--text-light); text-decoration: none; font-size: 0.85rem; padding: 0.3rem 0.7rem; border-radius: 6px; background: #f1f5f9; transition: all 0.2s; }
+    .top-nav a:hover, .top-nav a.active { background: var(--accent); color: #fff; }
+    .key-takeaway { background: var(--accent-light); border-radius: 12px; padding: 1.5rem 2rem; margin: 2rem 0; }
+    .key-takeaway h3 { color: var(--accent); margin-top: 0; }
+    .comment { color: #6a9955; }
+    .keyword { color: #c586c0; }
+    .function { color: #dcdcaa; }
+    .string { color: #ce9178; }
+    .component { color: #4ec9b0; }
+    .tag { color: #569cd6; }
+    .attr { color: #9cdcfe; }
+    .note-box { background: #fefce8; border-left: 4px solid #eab308; padding: 1.25rem 1.5rem; border-radius: 12px; margin: 1.5rem 0; }
+    .note-box p { margin-bottom: 0; }
+    .note-box strong { color: #854d0e; }
+    @media print { body { max-width: 100%; } .top-nav, .nav { display: none; } }
+  </style>
+</head>
+<body>
+
+  <nav class="top-nav">
+    <a href="index.html">Home</a>
+    <a href="01-compound-components.html">Compound Components</a>
+    <a href="02-render-props.html">Render Props</a>
+    <a href="03-higher-order-components.html">HOCs</a>
+    <a href="04-custom-hooks.html">Custom Hooks</a>
+    <a href="05-container-presentational.html" class="active">Container/Presentational</a>
+    <a href="06-state-reducer.html">State Reducer</a>
+    <a href="07-memoization.html">Memoization</a>
+    <a href="08-code-splitting.html">Code Splitting</a>
+    <a href="09-context-module.html">Context Module</a>
+    <a href="10-lazy-loading.html">Lazy Loading</a>
+    <a href="11-slot-pattern.html">Slot Pattern</a>
+  </nav>
+
+  <span class="badge">Logic Pattern</span>
+  <h1>Container &amp; Presentational</h1>
+  <p class="subtitle">Separate what a component does from how it looks</p>
+
+  <!-- ===================== THE PROBLEM ===================== -->
+  <h2>The Problem</h2>
+
+  <div class="problem-box">
+    <h3>Components That Do Everything</h3>
+    <p>When a single component handles data fetching, state management, business logic, <em>and</em> rendering, it becomes difficult to test, hard to reuse, and painful to modify. You cannot render the UI with mock data, nor can you reuse the data-fetching logic with a different layout.</p>
+  </div>
+
+  <h3>Before: Mixed Data + UI in One Component</h3>
+  <pre><code><span class="keyword">import</span> { <span class="attr">useState</span>, <span class="attr">useEffect</span> } <span class="keyword">from</span> <span class="string">'react'</span>;
+
+<span class="keyword">function</span> <span class="component">UserList</span>() {
+  <span class="keyword">const</span> [<span class="attr">users</span>, <span class="attr">setUsers</span>] = <span class="function">useState</span>([]);
+  <span class="keyword">const</span> [<span class="attr">loading</span>, <span class="attr">setLoading</span>] = <span class="function">useState</span>(<span class="keyword">true</span>);
+  <span class="keyword">const</span> [<span class="attr">error</span>, <span class="attr">setError</span>] = <span class="function">useState</span>(<span class="keyword">null</span>);
+
+  <span class="comment">// Data logic</span>
+  <span class="function">useEffect</span>(() =&gt; {
+    <span class="function">fetch</span>(<span class="string">'/api/users'</span>)
+      .<span class="function">then</span>(<span class="attr">res</span> =&gt; {
+        <span class="keyword">if</span> (!<span class="attr">res</span>.<span class="attr">ok</span>) <span class="keyword">throw new</span> <span class="component">Error</span>(<span class="string">'Failed to fetch'</span>);
+        <span class="keyword">return</span> <span class="attr">res</span>.<span class="function">json</span>();
+      })
+      .<span class="function">then</span>(<span class="attr">data</span> =&gt; <span class="function">setUsers</span>(<span class="attr">data</span>))
+      .<span class="function">catch</span>(<span class="attr">err</span> =&gt; <span class="function">setError</span>(<span class="attr">err</span>.<span class="attr">message</span>))
+      .<span class="function">finally</span>(() =&gt; <span class="function">setLoading</span>(<span class="keyword">false</span>));
+  }, []);
+
+  <span class="comment">// Rendering logic — tightly coupled to the data logic above</span>
+  <span class="keyword">if</span> (<span class="attr">loading</span>) <span class="keyword">return</span> <span class="tag">&lt;div</span> <span class="attr">className</span>=<span class="string">"spinner"</span><span class="tag">&gt;</span>Loading...<span class="tag">&lt;/div&gt;</span>;
+  <span class="keyword">if</span> (<span class="attr">error</span>) <span class="keyword">return</span> <span class="tag">&lt;div</span> <span class="attr">className</span>=<span class="string">"error"</span><span class="tag">&gt;</span>{<span class="attr">error</span>}<span class="tag">&lt;/div&gt;</span>;
+
+  <span class="keyword">return</span> (
+    <span class="tag">&lt;ul</span> <span class="attr">className</span>=<span class="string">"user-list"</span><span class="tag">&gt;</span>
+      {<span class="attr">users</span>.<span class="function">map</span>(<span class="attr">user</span> =&gt; (
+        <span class="tag">&lt;li</span> <span class="attr">key</span>={<span class="attr">user</span>.<span class="attr">id</span>} <span class="attr">className</span>=<span class="string">"user-card"</span><span class="tag">&gt;</span>
+          <span class="tag">&lt;img</span> <span class="attr">src</span>={<span class="attr">user</span>.<span class="attr">avatar</span>} <span class="attr">alt</span>={<span class="attr">user</span>.<span class="attr">name</span>} <span class="tag">/&gt;</span>
+          <span class="tag">&lt;h3&gt;</span>{<span class="attr">user</span>.<span class="attr">name</span>}<span class="tag">&lt;/h3&gt;</span>
+          <span class="tag">&lt;p&gt;</span>{<span class="attr">user</span>.<span class="attr">email</span>}<span class="tag">&lt;/p&gt;</span>
+        <span class="tag">&lt;/li&gt;</span>
+      ))}
+    <span class="tag">&lt;/ul&gt;</span>
+  );
+}</code></pre>
+
+  <p>This component cannot be reused with a different data source. You cannot render the user list in Storybook without mocking <code>fetch</code>. Testing requires both API mocking and DOM assertions in the same test.</p>
+
+  <!-- ===================== THE DIAGRAM ===================== -->
+  <h2>The Separation</h2>
+
+  <div class="diagram">
+    <svg viewBox="0 0 800 300" xmlns="http://www.w3.org/2000/svg" fill="none">
+      <!-- Container Component -->
+      <rect x="40" y="40" width="300" height="220" rx="14" fill="#f0fdfa" stroke="#14b8a6" stroke-width="2.5"/>
+      <rect x="70" y="60" width="240" height="32" rx="8" fill="#14b8a6"/>
+      <text x="190" y="81" text-anchor="middle" font-family="Inter, sans-serif" font-size="13" font-weight="700" fill="#fff">Container Component</text>
+
+      <text x="190" y="118" text-anchor="middle" font-family="Inter, sans-serif" font-size="12" font-weight="600" fill="#0f766e">What it does:</text>
+      <text x="190" y="142" text-anchor="middle" font-family="Fira Code, monospace" font-size="11" fill="#64748b">useState, useEffect</text>
+      <text x="190" y="162" text-anchor="middle" font-family="Fira Code, monospace" font-size="11" fill="#64748b">fetch('/api/users')</text>
+      <text x="190" y="182" text-anchor="middle" font-family="Inter, sans-serif" font-size="11" fill="#64748b">Manages loading, error state</text>
+
+      <line x1="70" y1="200" x2="310" y2="200" stroke="#99f6e4" stroke-width="1"/>
+      <text x="190" y="222" text-anchor="middle" font-family="Inter, sans-serif" font-size="11" font-style="italic" fill="#0d9488">No styling, no visual JSX</text>
+      <text x="190" y="242" text-anchor="middle" font-family="Inter, sans-serif" font-size="11" font-style="italic" fill="#0d9488">Only renders the presentational</text>
+
+      <!-- Arrow -->
+      <line x1="340" y1="150" x2="430" y2="150" stroke="#14b8a6" stroke-width="2.5"/>
+      <polygon points="426,143 440,150 426,157" fill="#14b8a6"/>
+      <text x="385" y="138" text-anchor="middle" font-family="Inter, sans-serif" font-size="12" font-weight="700" fill="#14b8a6">props</text>
+
+      <!-- Presentational Component -->
+      <rect x="460" y="40" width="300" height="220" rx="14" fill="#faf5ff" stroke="#a78bfa" stroke-width="2.5"/>
+      <rect x="490" y="60" width="240" height="32" rx="8" fill="#a78bfa"/>
+      <text x="610" y="81" text-anchor="middle" font-family="Inter, sans-serif" font-size="13" font-weight="700" fill="#fff">Presentational Component</text>
+
+      <text x="610" y="118" text-anchor="middle" font-family="Inter, sans-serif" font-size="12" font-weight="600" fill="#7c3aed">How it looks:</text>
+      <text x="610" y="142" text-anchor="middle" font-family="Fira Code, monospace" font-size="11" fill="#64748b">Receives users, loading, error</text>
+      <text x="610" y="162" text-anchor="middle" font-family="Fira Code, monospace" font-size="11" fill="#64748b">Renders &lt;ul&gt;, &lt;li&gt;, &lt;img&gt;</text>
+      <text x="610" y="182" text-anchor="middle" font-family="Inter, sans-serif" font-size="11" fill="#64748b">CSS classes, layout, styling</text>
+
+      <line x1="490" y1="200" x2="730" y2="200" stroke="#ddd6fe" stroke-width="1"/>
+      <text x="610" y="222" text-anchor="middle" font-family="Inter, sans-serif" font-size="11" font-style="italic" fill="#7c3aed">No data fetching, no side effects</text>
+      <text x="610" y="242" text-anchor="middle" font-family="Inter, sans-serif" font-size="11" font-style="italic" fill="#7c3aed">Easy to test, reuse, Storybook</text>
+    </svg>
+  </div>
+
+  <!-- ===================== THE SOLUTION ===================== -->
+  <h2>The Solution</h2>
+
+  <div class="solution-box">
+    <h3>Split Into Container + Presentational</h3>
+    <p>The container handles the "what" (data fetching, state, side effects). The presentational handles the "how" (markup, styles, layout). They communicate through props.</p>
+  </div>
+
+  <h3>After: Presentational Component (Pure UI)</h3>
+  <pre><code><span class="comment">// --- UserList.jsx (Presentational) ---</span>
+<span class="comment">// Only concerned with rendering. Receives everything via props.</span>
+
+<span class="keyword">function</span> <span class="component">UserList</span>({ <span class="attr">users</span>, <span class="attr">loading</span>, <span class="attr">error</span> }) {
+  <span class="keyword">if</span> (<span class="attr">loading</span>) <span class="keyword">return</span> <span class="tag">&lt;div</span> <span class="attr">className</span>=<span class="string">"spinner"</span><span class="tag">&gt;</span>Loading...<span class="tag">&lt;/div&gt;</span>;
+  <span class="keyword">if</span> (<span class="attr">error</span>) <span class="keyword">return</span> <span class="tag">&lt;div</span> <span class="attr">className</span>=<span class="string">"error"</span><span class="tag">&gt;</span>{<span class="attr">error</span>}<span class="tag">&lt;/div&gt;</span>;
+
+  <span class="keyword">return</span> (
+    <span class="tag">&lt;ul</span> <span class="attr">className</span>=<span class="string">"user-list"</span><span class="tag">&gt;</span>
+      {<span class="attr">users</span>.<span class="function">map</span>(<span class="attr">user</span> =&gt; (
+        <span class="tag">&lt;li</span> <span class="attr">key</span>={<span class="attr">user</span>.<span class="attr">id</span>} <span class="attr">className</span>=<span class="string">"user-card"</span><span class="tag">&gt;</span>
+          <span class="tag">&lt;img</span> <span class="attr">src</span>={<span class="attr">user</span>.<span class="attr">avatar</span>} <span class="attr">alt</span>={<span class="attr">user</span>.<span class="attr">name</span>} <span class="tag">/&gt;</span>
+          <span class="tag">&lt;h3&gt;</span>{<span class="attr">user</span>.<span class="attr">name</span>}<span class="tag">&lt;/h3&gt;</span>
+          <span class="tag">&lt;p&gt;</span>{<span class="attr">user</span>.<span class="attr">email</span>}<span class="tag">&lt;/p&gt;</span>
+        <span class="tag">&lt;/li&gt;</span>
+      ))}
+    <span class="tag">&lt;/ul&gt;</span>
+  );
+}
+
+<span class="comment">// Now you can:</span>
+<span class="comment">//   - Render &lt;UserList users={mockData} /&gt; in Storybook</span>
+<span class="comment">//   - Test the UI without mocking fetch</span>
+<span class="comment">//   - Reuse this with any data source</span></code></pre>
+
+  <h3>After: Container Component (Data Logic)</h3>
+  <pre><code><span class="comment">// --- UserListContainer.jsx (Container) ---</span>
+<span class="comment">// Only concerned with data. Renders the presentational component.</span>
+
+<span class="keyword">import</span> { <span class="attr">useState</span>, <span class="attr">useEffect</span> } <span class="keyword">from</span> <span class="string">'react'</span>;
+<span class="keyword">import</span> <span class="component">UserList</span> <span class="keyword">from</span> <span class="string">'./UserList'</span>;
+
+<span class="keyword">function</span> <span class="component">UserListContainer</span>() {
+  <span class="keyword">const</span> [<span class="attr">users</span>, <span class="attr">setUsers</span>] = <span class="function">useState</span>([]);
+  <span class="keyword">const</span> [<span class="attr">loading</span>, <span class="attr">setLoading</span>] = <span class="function">useState</span>(<span class="keyword">true</span>);
+  <span class="keyword">const</span> [<span class="attr">error</span>, <span class="attr">setError</span>] = <span class="function">useState</span>(<span class="keyword">null</span>);
+
+  <span class="function">useEffect</span>(() =&gt; {
+    <span class="function">fetch</span>(<span class="string">'/api/users'</span>)
+      .<span class="function">then</span>(<span class="attr">res</span> =&gt; {
+        <span class="keyword">if</span> (!<span class="attr">res</span>.<span class="attr">ok</span>) <span class="keyword">throw new</span> <span class="component">Error</span>(<span class="string">'Failed to fetch'</span>);
+        <span class="keyword">return</span> <span class="attr">res</span>.<span class="function">json</span>();
+      })
+      .<span class="function">then</span>(<span class="attr">data</span> =&gt; <span class="function">setUsers</span>(<span class="attr">data</span>))
+      .<span class="function">catch</span>(<span class="attr">err</span> =&gt; <span class="function">setError</span>(<span class="attr">err</span>.<span class="attr">message</span>))
+      .<span class="function">finally</span>(() =&gt; <span class="function">setLoading</span>(<span class="keyword">false</span>));
+  }, []);
+
+  <span class="keyword">return</span> <span class="tag">&lt;</span><span class="component">UserList</span> <span class="attr">users</span>={<span class="attr">users</span>} <span class="attr">loading</span>={<span class="attr">loading</span>} <span class="attr">error</span>={<span class="attr">error</span>} <span class="tag">/&gt;</span>;
+}</code></pre>
+
+  <!-- ===================== MODERN ALTERNATIVE ===================== -->
+  <h2>Modern Alternative: Custom Hook + Presentational</h2>
+
+  <p>Today, the preferred approach is to extract the data logic into a <strong>custom hook</strong> instead of a container component. The result is the same separation of concerns, but without the extra component layer.</p>
+
+  <pre><code><span class="comment">// --- useUsers.js (Custom Hook replaces the Container) ---</span>
+<span class="keyword">import</span> { <span class="attr">useState</span>, <span class="attr">useEffect</span> } <span class="keyword">from</span> <span class="string">'react'</span>;
+
+<span class="keyword">export function</span> <span class="function">useUsers</span>() {
+  <span class="keyword">const</span> [<span class="attr">users</span>, <span class="attr">setUsers</span>] = <span class="function">useState</span>([]);
+  <span class="keyword">const</span> [<span class="attr">loading</span>, <span class="attr">setLoading</span>] = <span class="function">useState</span>(<span class="keyword">true</span>);
+  <span class="keyword">const</span> [<span class="attr">error</span>, <span class="attr">setError</span>] = <span class="function">useState</span>(<span class="keyword">null</span>);
+
+  <span class="function">useEffect</span>(() =&gt; {
+    <span class="function">fetch</span>(<span class="string">'/api/users'</span>)
+      .<span class="function">then</span>(<span class="attr">res</span> =&gt; {
+        <span class="keyword">if</span> (!<span class="attr">res</span>.<span class="attr">ok</span>) <span class="keyword">throw new</span> <span class="component">Error</span>(<span class="string">'Failed to fetch'</span>);
+        <span class="keyword">return</span> <span class="attr">res</span>.<span class="function">json</span>();
+      })
+      .<span class="function">then</span>(<span class="attr">data</span> =&gt; <span class="function">setUsers</span>(<span class="attr">data</span>))
+      .<span class="function">catch</span>(<span class="attr">err</span> =&gt; <span class="function">setError</span>(<span class="attr">err</span>.<span class="attr">message</span>))
+      .<span class="function">finally</span>(() =&gt; <span class="function">setLoading</span>(<span class="keyword">false</span>));
+  }, []);
+
+  <span class="keyword">return</span> { <span class="attr">users</span>, <span class="attr">loading</span>, <span class="attr">error</span> };
+}
+
+<span class="comment">// --- UserListPage.jsx (Hook + Presentational together) ---</span>
+<span class="keyword">import</span> { <span class="function">useUsers</span> } <span class="keyword">from</span> <span class="string">'./useUsers'</span>;
+<span class="keyword">import</span> <span class="component">UserList</span> <span class="keyword">from</span> <span class="string">'./UserList'</span>;
+
+<span class="keyword">function</span> <span class="component">UserListPage</span>() {
+  <span class="keyword">const</span> { <span class="attr">users</span>, <span class="attr">loading</span>, <span class="attr">error</span> } = <span class="function">useUsers</span>();
+  <span class="keyword">return</span> <span class="tag">&lt;</span><span class="component">UserList</span> <span class="attr">users</span>={<span class="attr">users</span>} <span class="attr">loading</span>={<span class="attr">loading</span>} <span class="attr">error</span>={<span class="attr">error</span>} <span class="tag">/&gt;</span>;
+}
+
+<span class="comment">// Same separation, one fewer component in the tree.</span></code></pre>
+
+  <!-- ===================== DAN ABRAMOV NOTE ===================== -->
+  <div class="note-box">
+    <p><strong>A note on history:</strong> Dan Abramov, who popularized this pattern, later wrote that he no longer recommends splitting components into containers and presentationals <em>for the sake of it</em>. With Hooks, you can often achieve the same clean separation using a custom hook. The mental model &mdash; separating "what" from "how" &mdash; is still valuable, even if the implementation technique has evolved.</p>
+  </div>
+
+  <!-- ===================== WHEN TO USE ===================== -->
+  <h2>When to Use</h2>
+
+  <div class="card-row">
+    <div class="card do-card">
+      <h4>Use This Pattern When</h4>
+      <ul>
+        <li>A component has grown <strong>complex</strong> with mixed data logic and rendering</li>
+        <li>You need to <strong>reuse the same UI</strong> with different data sources</li>
+        <li>You want to <strong>test rendering</strong> independently from data fetching</li>
+        <li>You're building a <strong>design system</strong> or component library where pure presentational components are essential</li>
+      </ul>
+    </div>
+    <div class="card dont-card">
+      <h4>Avoid This Pattern When</h4>
+      <ul>
+        <li>The component is <strong>simple</strong> &mdash; splitting it adds unnecessary indirection</li>
+        <li>A <strong>custom hook</strong> achieves the same separation more cleanly (prefer hooks in modern React)</li>
+        <li>You're splitting just because of a <strong>naming convention</strong>, not because there's a real benefit</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ===================== KEY TAKEAWAY ===================== -->
+  <div class="key-takeaway">
+    <h3>Key Takeaway</h3>
+    <p>The real lesson is not about containers vs presentational components &mdash; it is about <strong>separating concerns</strong>. Whether you use this pattern, custom hooks, or another approach, keep your data logic and rendering logic distinct. Your future self (and your teammates) will thank you when they need to change one without breaking the other.</p>
+  </div>
+
+  <!-- ===================== NAVIGATION ===================== -->
+  <nav class="nav">
+    <a href="04-custom-hooks.html">&larr; Custom Hooks</a>
+    <a href="06-state-reducer.html">State Reducer &rarr;</a>
+  </nav>
+
+</body>
+</html>

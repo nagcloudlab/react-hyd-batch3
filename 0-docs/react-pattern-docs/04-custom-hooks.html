@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Custom Hooks — React Patterns</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --accent: #0ea5e9;
+      --accent-light: #f0f9ff;
+      --problem-bg: #fff7ed;
+      --problem-border: #fb923c;
+      --solution-bg: #f0fdf4;
+      --solution-border: #4ade80;
+      --code-bg: #1e1e2e;
+      --code-text: #cdd6f4;
+      --text: #1e293b;
+      --text-light: #64748b;
+      --surface: #ffffff;
+      --border: #e2e8f0;
+      --font: 'Inter', -apple-system, sans-serif;
+      --mono: 'Fira Code', 'Consolas', monospace;
+    }
+    body { font-family: var(--font); color: var(--text); line-height: 1.7; max-width: 960px; margin: 0 auto; padding: 2rem; background: #fafbfc; }
+    h1 { font-size: 2.5rem; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 0.5rem; }
+    h2 { font-size: 1.5rem; font-weight: 700; margin: 2.5rem 0 1rem; color: var(--accent); }
+    h3 { font-size: 1.15rem; font-weight: 600; margin: 1.5rem 0 0.75rem; }
+    p, li { font-size: 1.05rem; margin-bottom: 0.75rem; }
+    ul { padding-left: 1.5rem; }
+    .badge { display: inline-block; background: var(--accent); color: #fff; font-size: 0.8rem; font-weight: 600; padding: 0.25rem 0.75rem; border-radius: 999px; margin-bottom: 1rem; letter-spacing: 0.05em; text-transform: uppercase; }
+    .subtitle { font-size: 1.25rem; color: var(--text-light); font-weight: 400; margin-bottom: 2rem; }
+    .problem-box, .solution-box { padding: 1.5rem 2rem; border-radius: 12px; margin: 1.5rem 0; border-left: 4px solid; }
+    .problem-box { background: var(--problem-bg); border-color: var(--problem-border); }
+    .problem-box h3::before { content: '\26A0 '; }
+    .solution-box { background: var(--solution-bg); border-color: var(--solution-border); }
+    .solution-box h3::before { content: '\2726 '; }
+    pre { background: var(--code-bg); color: var(--code-text); padding: 1.5rem; border-radius: 10px; overflow-x: auto; margin: 1rem 0; font-size: 0.92rem; line-height: 1.6; }
+    code { font-family: var(--mono); font-size: 0.9em; }
+    :not(pre) > code { background: #f1f5f9; padding: 0.15em 0.4em; border-radius: 4px; color: var(--accent); }
+    .diagram { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 2rem; margin: 2rem 0; text-align: center; }
+    .diagram svg { max-width: 100%; height: auto; }
+    .card-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin: 1.5rem 0; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1.25rem 1.5rem; }
+    .card h4 { font-weight: 600; margin-bottom: 0.5rem; }
+    .do-card { border-left: 4px solid #22c55e; }
+    .dont-card { border-left: 4px solid #ef4444; }
+    .nav { display: flex; justify-content: space-between; padding: 1rem 0; border-top: 1px solid var(--border); margin-top: 3rem; font-size: 0.95rem; }
+    .nav a { color: var(--accent); text-decoration: none; font-weight: 500; }
+    .nav a:hover { text-decoration: underline; }
+    .top-nav { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border); }
+    .top-nav a { color: var(--text-light); text-decoration: none; font-size: 0.85rem; padding: 0.3rem 0.7rem; border-radius: 6px; background: #f1f5f9; transition: all 0.2s; }
+    .top-nav a:hover, .top-nav a.active { background: var(--accent); color: #fff; }
+    .key-takeaway { background: var(--accent-light); border-radius: 12px; padding: 1.5rem 2rem; margin: 2rem 0; }
+    .key-takeaway h3 { color: var(--accent); margin-top: 0; }
+    .comment { color: #6a9955; }
+    .keyword { color: #c586c0; }
+    .function { color: #dcdcaa; }
+    .string { color: #ce9178; }
+    .component { color: #4ec9b0; }
+    .tag { color: #569cd6; }
+    .attr { color: #9cdcfe; }
+    .rules-list { list-style: none; padding-left: 0; }
+    .rules-list li { padding: 0.75rem 1rem; margin-bottom: 0.5rem; background: var(--accent-light); border-radius: 8px; font-weight: 500; }
+    .rules-list li code { font-weight: 600; }
+    @media print { body { max-width: 100%; } .top-nav, .nav { display: none; } }
+  </style>
+</head>
+<body>
+
+  <nav class="top-nav">
+    <a href="index.html">Home</a>
+    <a href="01-compound-components.html">Compound Components</a>
+    <a href="02-render-props.html">Render Props</a>
+    <a href="03-higher-order-components.html">HOCs</a>
+    <a href="04-custom-hooks.html" class="active">Custom Hooks</a>
+    <a href="05-container-presentational.html">Container/Presentational</a>
+    <a href="06-state-reducer.html">State Reducer</a>
+    <a href="07-memoization.html">Memoization</a>
+    <a href="08-code-splitting.html">Code Splitting</a>
+    <a href="09-context-module.html">Context Module</a>
+    <a href="10-lazy-loading.html">Lazy Loading</a>
+    <a href="11-slot-pattern.html">Slot Pattern</a>
+  </nav>
+
+  <span class="badge">Logic Pattern</span>
+  <h1>Custom Hooks</h1>
+  <p class="subtitle">Extract and reuse stateful logic without changing your component hierarchy</p>
+
+  <!-- ===================== THE PROBLEM ===================== -->
+  <h2>The Problem</h2>
+
+  <div class="problem-box">
+    <h3>Duplicated Stateful Logic Across Components</h3>
+    <p>Multiple components need the same combination of <code>useState</code> and <code>useEffect</code> &mdash; for tracking window size, syncing to localStorage, fetching data, or handling form state. Before hooks, the only options were HOCs and render props, both of which add wrapper components to the tree.</p>
+  </div>
+
+  <h3>Before: Duplicated Window Resize Logic</h3>
+  <pre><code><span class="comment">// --- Navbar.jsx ---</span>
+<span class="keyword">function</span> <span class="component">Navbar</span>() {
+  <span class="keyword">const</span> [<span class="attr">windowSize</span>, <span class="attr">setWindowSize</span>] = <span class="function">useState</span>({
+    <span class="attr">width</span>: window.<span class="attr">innerWidth</span>,
+    <span class="attr">height</span>: window.<span class="attr">innerHeight</span>,
+  });
+
+  <span class="function">useEffect</span>(() =&gt; {
+    <span class="keyword">const</span> <span class="function">handleResize</span> = () =&gt; {
+      <span class="function">setWindowSize</span>({ <span class="attr">width</span>: window.<span class="attr">innerWidth</span>, <span class="attr">height</span>: window.<span class="attr">innerHeight</span> });
+    };
+    window.<span class="function">addEventListener</span>(<span class="string">'resize'</span>, <span class="function">handleResize</span>);
+    <span class="keyword">return</span> () =&gt; window.<span class="function">removeEventListener</span>(<span class="string">'resize'</span>, <span class="function">handleResize</span>);
+  }, []);
+
+  <span class="keyword">return</span> (
+    <span class="tag">&lt;nav&gt;</span>
+      {<span class="attr">windowSize</span>.<span class="attr">width</span> &gt; 768 ? <span class="tag">&lt;</span><span class="component">DesktopMenu</span> <span class="tag">/&gt;</span> : <span class="tag">&lt;</span><span class="component">MobileMenu</span> <span class="tag">/&gt;</span>}
+    <span class="tag">&lt;/nav&gt;</span>
+  );
+}
+
+<span class="comment">// --- Sidebar.jsx --- (exact same resize logic!)</span>
+<span class="keyword">function</span> <span class="component">Sidebar</span>() {
+  <span class="keyword">const</span> [<span class="attr">windowSize</span>, <span class="attr">setWindowSize</span>] = <span class="function">useState</span>({
+    <span class="attr">width</span>: window.<span class="attr">innerWidth</span>,
+    <span class="attr">height</span>: window.<span class="attr">innerHeight</span>,
+  });
+
+  <span class="function">useEffect</span>(() =&gt; {
+    <span class="keyword">const</span> <span class="function">handleResize</span> = () =&gt; {
+      <span class="function">setWindowSize</span>({ <span class="attr">width</span>: window.<span class="attr">innerWidth</span>, <span class="attr">height</span>: window.<span class="attr">innerHeight</span> });
+    };
+    window.<span class="function">addEventListener</span>(<span class="string">'resize'</span>, <span class="function">handleResize</span>);
+    <span class="keyword">return</span> () =&gt; window.<span class="function">removeEventListener</span>(<span class="string">'resize'</span>, <span class="function">handleResize</span>);
+  }, []);
+
+  <span class="keyword">if</span> (<span class="attr">windowSize</span>.<span class="attr">width</span> &lt; 768) <span class="keyword">return null</span>;
+  <span class="keyword">return</span> <span class="tag">&lt;aside&gt;</span>Sidebar content<span class="tag">&lt;/aside&gt;</span>;
+}</code></pre>
+
+  <p>Two components, identical <code>useState</code> + <code>useEffect</code> logic. Every new component that needs window dimensions repeats the same 10 lines.</p>
+
+  <!-- ===================== THE DIAGRAM ===================== -->
+  <h2>How Custom Hooks Work</h2>
+
+  <div class="diagram">
+    <svg viewBox="0 0 800 340" xmlns="http://www.w3.org/2000/svg" fill="none">
+      <!-- Components on the left -->
+      <rect x="30" y="30" width="170" height="60" rx="10" fill="#f0f9ff" stroke="#0ea5e9" stroke-width="2"/>
+      <text x="115" y="65" text-anchor="middle" font-family="Fira Code, monospace" font-size="13" font-weight="500" fill="#0e7490">&lt;Navbar /&gt;</text>
+
+      <rect x="30" y="140" width="170" height="60" rx="10" fill="#f0f9ff" stroke="#0ea5e9" stroke-width="2"/>
+      <text x="115" y="175" text-anchor="middle" font-family="Fira Code, monospace" font-size="13" font-weight="500" fill="#0e7490">&lt;Sidebar /&gt;</text>
+
+      <rect x="30" y="250" width="170" height="60" rx="10" fill="#f0f9ff" stroke="#0ea5e9" stroke-width="2"/>
+      <text x="115" y="285" text-anchor="middle" font-family="Fira Code, monospace" font-size="13" font-weight="500" fill="#0e7490">&lt;Footer /&gt;</text>
+
+      <!-- Arrows -->
+      <line x1="200" y1="60" x2="330" y2="145" stroke="#0ea5e9" stroke-width="2"/>
+      <polygon points="326,140 336,148 326,150" fill="#0ea5e9"/>
+
+      <line x1="200" y1="170" x2="330" y2="170" stroke="#0ea5e9" stroke-width="2"/>
+      <polygon points="326,165 336,170 326,175" fill="#0ea5e9"/>
+
+      <line x1="200" y1="280" x2="330" y2="195" stroke="#0ea5e9" stroke-width="2"/>
+      <polygon points="326,190 336,192 326,200" fill="#0ea5e9"/>
+
+      <!-- Central Hook Box -->
+      <rect x="335" y="105" width="220" height="130" rx="14" fill="#f0f9ff" stroke="#0ea5e9" stroke-width="2.5"/>
+      <rect x="360" y="120" width="170" height="32" rx="8" fill="#0ea5e9"/>
+      <text x="445" y="141" text-anchor="middle" font-family="Fira Code, monospace" font-size="13" font-weight="600" fill="#fff">useWindowSize()</text>
+
+      <text x="445" y="175" text-anchor="middle" font-family="Fira Code, monospace" font-size="11" fill="#64748b">useState()</text>
+      <text x="445" y="195" text-anchor="middle" font-family="Fira Code, monospace" font-size="11" fill="#64748b">useEffect(resize)</text>
+      <text x="445" y="215" text-anchor="middle" font-family="Inter, sans-serif" font-size="11" fill="#0e7490">return { width, height }</text>
+
+      <!-- Right side: independent instances -->
+      <line x1="555" y1="145" x2="615" y2="70" stroke="#0ea5e9" stroke-width="1.5" stroke-dasharray="5,4"/>
+      <line x1="555" y1="170" x2="615" y2="170" stroke="#0ea5e9" stroke-width="1.5" stroke-dasharray="5,4"/>
+      <line x1="555" y1="195" x2="615" y2="270" stroke="#0ea5e9" stroke-width="1.5" stroke-dasharray="5,4"/>
+
+      <rect x="620" y="42" width="155" height="56" rx="8" fill="#ecfdf5" stroke="#34d399" stroke-width="1.5"/>
+      <text x="697" y="63" text-anchor="middle" font-family="Inter, sans-serif" font-size="10" font-weight="600" fill="#065f46">Own state instance</text>
+      <text x="697" y="82" text-anchor="middle" font-family="Fira Code, monospace" font-size="10" fill="#64748b">{ width, height }</text>
+
+      <rect x="620" y="142" width="155" height="56" rx="8" fill="#ecfdf5" stroke="#34d399" stroke-width="1.5"/>
+      <text x="697" y="163" text-anchor="middle" font-family="Inter, sans-serif" font-size="10" font-weight="600" fill="#065f46">Own state instance</text>
+      <text x="697" y="182" text-anchor="middle" font-family="Fira Code, monospace" font-size="10" fill="#64748b">{ width, height }</text>
+
+      <rect x="620" y="242" width="155" height="56" rx="8" fill="#ecfdf5" stroke="#34d399" stroke-width="1.5"/>
+      <text x="697" y="263" text-anchor="middle" font-family="Inter, sans-serif" font-size="10" font-weight="600" fill="#065f46">Own state instance</text>
+      <text x="697" y="282" text-anchor="middle" font-family="Fira Code, monospace" font-size="10" fill="#64748b">{ width, height }</text>
+
+      <!-- Label -->
+      <text x="445" y="320" text-anchor="middle" font-family="Inter, sans-serif" font-size="12" font-weight="600" fill="#64748b">Shared logic, independent state per component</text>
+    </svg>
+  </div>
+
+  <p>Each component that calls <code>useWindowSize()</code> gets its <strong>own independent copy</strong> of the state. The logic is shared, but the state is not. No wrapper components are added to the tree.</p>
+
+  <!-- ===================== THE SOLUTION ===================== -->
+  <h2>The Solution</h2>
+
+  <div class="solution-box">
+    <h3>Extract Logic Into a Custom Hook</h3>
+    <p>Move the shared <code>useState</code> + <code>useEffect</code> logic into a function that starts with <code>use</code>. Components call the hook like any built-in hook and receive the values they need.</p>
+  </div>
+
+  <h3>After: <code>useWindowSize</code> Custom Hook</h3>
+  <pre><code><span class="comment">// --- useWindowSize.js ---</span>
+<span class="keyword">import</span> { <span class="attr">useState</span>, <span class="attr">useEffect</span> } <span class="keyword">from</span> <span class="string">'react'</span>;
+
+<span class="keyword">export function</span> <span class="function">useWindowSize</span>() {
+  <span class="keyword">const</span> [<span class="attr">size</span>, <span class="attr">setSize</span>] = <span class="function">useState</span>({
+    <span class="attr">width</span>: window.<span class="attr">innerWidth</span>,
+    <span class="attr">height</span>: window.<span class="attr">innerHeight</span>,
+  });
+
+  <span class="function">useEffect</span>(() =&gt; {
+    <span class="keyword">const</span> <span class="function">handleResize</span> = () =&gt; {
+      <span class="function">setSize</span>({ <span class="attr">width</span>: window.<span class="attr">innerWidth</span>, <span class="attr">height</span>: window.<span class="attr">innerHeight</span> });
+    };
+    window.<span class="function">addEventListener</span>(<span class="string">'resize'</span>, <span class="function">handleResize</span>);
+    <span class="keyword">return</span> () =&gt; window.<span class="function">removeEventListener</span>(<span class="string">'resize'</span>, <span class="function">handleResize</span>);
+  }, []);
+
+  <span class="keyword">return</span> <span class="attr">size</span>;
+}</code></pre>
+
+  <h3>Components: Clean and Focused</h3>
+  <pre><code><span class="keyword">import</span> { <span class="function">useWindowSize</span> } <span class="keyword">from</span> <span class="string">'./useWindowSize'</span>;
+
+<span class="comment">// --- Navbar.jsx ---</span>
+<span class="keyword">function</span> <span class="component">Navbar</span>() {
+  <span class="keyword">const</span> { <span class="attr">width</span> } = <span class="function">useWindowSize</span>();
+  <span class="keyword">return</span> <span class="tag">&lt;nav&gt;</span>{<span class="attr">width</span> &gt; 768 ? <span class="tag">&lt;</span><span class="component">DesktopMenu</span> <span class="tag">/&gt;</span> : <span class="tag">&lt;</span><span class="component">MobileMenu</span> <span class="tag">/&gt;</span>}<span class="tag">&lt;/nav&gt;</span>;
+}
+
+<span class="comment">// --- Sidebar.jsx ---</span>
+<span class="keyword">function</span> <span class="component">Sidebar</span>() {
+  <span class="keyword">const</span> { <span class="attr">width</span> } = <span class="function">useWindowSize</span>();
+  <span class="keyword">if</span> (<span class="attr">width</span> &lt; 768) <span class="keyword">return null</span>;
+  <span class="keyword">return</span> <span class="tag">&lt;aside&gt;</span>Sidebar content<span class="tag">&lt;/aside&gt;</span>;
+}</code></pre>
+
+  <!-- ===================== BONUS: useLocalStorage ===================== -->
+  <h3>Bonus: <code>useLocalStorage</code> &mdash; Hooks That Compose</h3>
+  <pre><code><span class="keyword">import</span> { <span class="attr">useState</span>, <span class="attr">useEffect</span> } <span class="keyword">from</span> <span class="string">'react'</span>;
+
+<span class="keyword">export function</span> <span class="function">useLocalStorage</span>(<span class="attr">key</span>, <span class="attr">initialValue</span>) {
+  <span class="comment">// Initialize state from localStorage (or use the default)</span>
+  <span class="keyword">const</span> [<span class="attr">value</span>, <span class="attr">setValue</span>] = <span class="function">useState</span>(() =&gt; {
+    <span class="keyword">try</span> {
+      <span class="keyword">const</span> <span class="attr">stored</span> = localStorage.<span class="function">getItem</span>(<span class="attr">key</span>);
+      <span class="keyword">return</span> <span class="attr">stored</span> !== <span class="keyword">null</span> ? JSON.<span class="function">parse</span>(<span class="attr">stored</span>) : <span class="attr">initialValue</span>;
+    } <span class="keyword">catch</span> {
+      <span class="keyword">return</span> <span class="attr">initialValue</span>;
+    }
+  });
+
+  <span class="comment">// Sync to localStorage whenever the value changes</span>
+  <span class="function">useEffect</span>(() =&gt; {
+    localStorage.<span class="function">setItem</span>(<span class="attr">key</span>, JSON.<span class="function">stringify</span>(<span class="attr">value</span>));
+  }, [<span class="attr">key</span>, <span class="attr">value</span>]);
+
+  <span class="keyword">return</span> [<span class="attr">value</span>, <span class="attr">setValue</span>];
+}
+
+<span class="comment">// Usage — works just like useState, but persists!</span>
+<span class="keyword">function</span> <span class="component">ThemeToggle</span>() {
+  <span class="keyword">const</span> [<span class="attr">theme</span>, <span class="attr">setTheme</span>] = <span class="function">useLocalStorage</span>(<span class="string">'theme'</span>, <span class="string">'light'</span>);
+
+  <span class="keyword">return</span> (
+    <span class="tag">&lt;button</span> <span class="attr">onClick</span>={() =&gt; <span class="function">setTheme</span>(<span class="attr">theme</span> === <span class="string">'light'</span> ? <span class="string">'dark'</span> : <span class="string">'light'</span>)}<span class="tag">&gt;</span>
+      Current: {<span class="attr">theme</span>}
+    <span class="tag">&lt;/button&gt;</span>
+  );
+}</code></pre>
+
+  <!-- ===================== RULES ===================== -->
+  <h2>Rules of Custom Hooks</h2>
+
+  <ul class="rules-list">
+    <li>The function name <strong>must start with <code>use</code></strong> &mdash; this tells React to enforce the Rules of Hooks (no conditional calls, no loops).</li>
+    <li>Custom hooks <strong>can call other hooks</strong> &mdash; including both built-in hooks and other custom hooks. This is how hooks compose.</li>
+    <li>Each call to a custom hook gets its <strong>own independent state</strong> &mdash; calling <code>useWindowSize()</code> in two components creates two separate <code>useState</code> instances. State is never shared between callers.</li>
+  </ul>
+
+  <!-- ===================== WHEN TO USE ===================== -->
+  <h2>When to Use</h2>
+
+  <div class="card-row">
+    <div class="card do-card">
+      <h4>Use Custom Hooks When</h4>
+      <ul>
+        <li>Two or more components share <strong>identical stateful logic</strong> (effects, state, subscriptions)</li>
+        <li>You want to <strong>test logic independently</strong> from the UI</li>
+        <li>A component's logic is <strong>complex enough</strong> to extract for clarity</li>
+        <li>You want to <strong>replace an HOC or render prop</strong> with a simpler approach</li>
+      </ul>
+    </div>
+    <div class="card dont-card">
+      <h4>Avoid Custom Hooks When</h4>
+      <ul>
+        <li>The function is a <strong>pure utility</strong> that does not use any hooks &mdash; just make it a regular function</li>
+        <li>The hook is <strong>overly abstract</strong> and hides important details that the component should control</li>
+        <li>Only <strong>one component</strong> uses it and the logic is simple &mdash; extraction adds indirection without benefit</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ===================== KEY TAKEAWAY ===================== -->
+  <div class="key-takeaway">
+    <h3>Key Takeaway</h3>
+    <p>Custom Hooks are the modern answer to logic reuse in React. They replace HOCs and Render Props for most use cases while keeping your component tree flat. If you find yourself copying <code>useState</code> + <code>useEffect</code> between components, you have a custom hook waiting to be extracted.</p>
+  </div>
+
+  <!-- ===================== NAVIGATION ===================== -->
+  <nav class="nav">
+    <a href="03-higher-order-components.html">&larr; Higher-Order Components</a>
+    <a href="05-container-presentational.html">Container/Presentational &rarr;</a>
+  </nav>
+
+</body>
+</html>

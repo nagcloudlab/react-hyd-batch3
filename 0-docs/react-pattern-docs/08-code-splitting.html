@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Code Splitting &amp; Lazy Loading — React Patterns</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --accent: #ec4899;
+  --accent-light: #fdf2f8;
+  --problem-bg: #fff7ed;
+  --problem-border: #fb923c;
+  --solution-bg: #f0fdf4;
+  --solution-border: #4ade80;
+  --code-bg: #1e1e2e;
+  --code-text: #cdd6f4;
+  --text: #1e293b;
+  --text-light: #64748b;
+  --surface: #ffffff;
+  --border: #e2e8f0;
+  --font: 'Inter', -apple-system, sans-serif;
+  --mono: 'Fira Code', 'Consolas', monospace;
+}
+body { font-family: var(--font); color: var(--text); line-height: 1.7; max-width: 960px; margin: 0 auto; padding: 2rem; background: #fafbfc; }
+h1 { font-size: 2.5rem; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 0.5rem; }
+h2 { font-size: 1.5rem; font-weight: 700; margin: 2.5rem 0 1rem; color: var(--accent); }
+h3 { font-size: 1.15rem; font-weight: 600; margin: 1.5rem 0 0.75rem; }
+p, li { font-size: 1.05rem; margin-bottom: 0.75rem; }
+ul { padding-left: 1.5rem; }
+.badge { display: inline-block; background: var(--accent); color: #fff; font-size: 0.8rem; font-weight: 600; padding: 0.25rem 0.75rem; border-radius: 999px; margin-bottom: 1rem; letter-spacing: 0.05em; text-transform: uppercase; }
+.subtitle { font-size: 1.25rem; color: var(--text-light); font-weight: 400; margin-bottom: 2rem; }
+.problem-box, .solution-box { padding: 1.5rem 2rem; border-radius: 12px; margin: 1.5rem 0; border-left: 4px solid; }
+.problem-box { background: var(--problem-bg); border-color: var(--problem-border); }
+.problem-box h3::before { content: '\26A0 '; }
+.solution-box { background: var(--solution-bg); border-color: var(--solution-border); }
+.solution-box h3::before { content: '\2726 '; }
+pre { background: var(--code-bg); color: var(--code-text); padding: 1.5rem; border-radius: 10px; overflow-x: auto; margin: 1rem 0; font-size: 0.92rem; line-height: 1.6; }
+code { font-family: var(--mono); font-size: 0.9em; }
+:not(pre) > code { background: #f1f5f9; padding: 0.15em 0.4em; border-radius: 4px; color: var(--accent); }
+.diagram { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 2rem; margin: 2rem 0; text-align: center; }
+.diagram svg { max-width: 100%; height: auto; }
+.card-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin: 1.5rem 0; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1.25rem 1.5rem; }
+.card h4 { font-weight: 600; margin-bottom: 0.5rem; }
+.do-card { border-left: 4px solid #22c55e; }
+.dont-card { border-left: 4px solid #ef4444; }
+.nav { display: flex; justify-content: space-between; padding: 1rem 0; border-top: 1px solid var(--border); margin-top: 3rem; font-size: 0.95rem; }
+.nav a { color: var(--accent); text-decoration: none; font-weight: 500; }
+.nav a:hover { text-decoration: underline; }
+.top-nav { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border); }
+.top-nav a { color: var(--text-light); text-decoration: none; font-size: 0.85rem; padding: 0.3rem 0.7rem; border-radius: 6px; background: #f1f5f9; transition: all 0.2s; }
+.top-nav a:hover, .top-nav a.active { background: var(--accent); color: #fff; }
+.key-takeaway { background: var(--accent-light); border-radius: 12px; padding: 1.5rem 2rem; margin: 2rem 0; }
+.key-takeaway h3 { color: var(--accent); margin-top: 0; }
+.comment { color: #6a9955; }
+.keyword { color: #c586c0; }
+.function { color: #dcdcaa; }
+.string { color: #ce9178; }
+.component { color: #4ec9b0; }
+.tag { color: #569cd6; }
+.attr { color: #9cdcfe; }
+@media print { body { max-width: 100%; } .top-nav, .nav { display: none; } }
+</style>
+</head>
+<body>
+
+<nav class="top-nav">
+  <a href="index.html">Home</a>
+  <a href="01-compound-components.html">Compound Components</a>
+  <a href="02-render-props.html">Render Props</a>
+  <a href="03-higher-order-components.html">HOCs</a>
+  <a href="04-custom-hooks.html">Custom Hooks</a>
+  <a href="05-container-presentational.html">Container/Presentational</a>
+  <a href="06-state-reducer.html">State Reducer</a>
+  <a href="07-memoization.html">Memoization</a>
+  <a href="08-code-splitting.html" class="active">Code Splitting</a>
+  <a href="09-context-module.html">Context Module</a>
+  <a href="10-lazy-loading.html">Lazy Loading</a>
+  <a href="11-slot-pattern.html">Slot Pattern</a>
+</nav>
+
+<span class="badge">Performance Pattern</span>
+<h1>Code Splitting &amp; Lazy Loading</h1>
+<p class="subtitle">Load code on demand to reduce initial bundle size and improve Time to Interactive</p>
+
+<h2>The Problem</h2>
+
+<div class="problem-box">
+  <h3>The Monolithic Bundle</h3>
+  <p>As your app grows, the JavaScript bundle grows with it. Users download megabytes of code for pages they may never visit. The admin panel, the charts library, the settings page &mdash; all loaded upfront even if the user only visits the homepage. This destroys your Time to Interactive and wastes bandwidth.</p>
+</div>
+
+<pre><code><span class="comment">// Every import is bundled into ONE massive file</span>
+<span class="keyword">import</span> <span class="component">Dashboard</span> <span class="keyword">from</span> <span class="string">'./pages/Dashboard'</span>;
+<span class="keyword">import</span> <span class="component">AdminPanel</span> <span class="keyword">from</span> <span class="string">'./pages/AdminPanel'</span>;       <span class="comment">// 400KB — only for admins</span>
+<span class="keyword">import</span> <span class="component">Settings</span> <span class="keyword">from</span> <span class="string">'./pages/Settings'</span>;           <span class="comment">// 200KB — rarely visited</span>
+<span class="keyword">import</span> <span class="component">Analytics</span> <span class="keyword">from</span> <span class="string">'./pages/Analytics'</span>;         <span class="comment">// 300KB — heavy chart library</span>
+<span class="keyword">import</span> <span class="component">UserProfile</span> <span class="keyword">from</span> <span class="string">'./pages/UserProfile'</span>;     <span class="comment">// 150KB</span>
+<span class="keyword">import</span> <span class="component">Reports</span> <span class="keyword">from</span> <span class="string">'./pages/Reports'</span>;             <span class="comment">// 250KB — PDF generation</span>
+
+<span class="comment">// User visits homepage → downloads ALL of the above (2.5MB+)</span>
+<span class="keyword">function</span> <span class="component">App</span>() {
+  <span class="keyword">return</span> (
+    &lt;<span class="component">Routes</span>&gt;
+      &lt;<span class="component">Route</span> <span class="attr">path</span>=<span class="string">"/"</span> <span class="attr">element</span>={&lt;<span class="component">Dashboard</span> /&gt;} /&gt;
+      &lt;<span class="component">Route</span> <span class="attr">path</span>=<span class="string">"/admin"</span> <span class="attr">element</span>={&lt;<span class="component">AdminPanel</span> /&gt;} /&gt;
+      &lt;<span class="component">Route</span> <span class="attr">path</span>=<span class="string">"/settings"</span> <span class="attr">element</span>={&lt;<span class="component">Settings</span> /&gt;} /&gt;
+      &lt;<span class="component">Route</span> <span class="attr">path</span>=<span class="string">"/analytics"</span> <span class="attr">element</span>={&lt;<span class="component">Analytics</span> /&gt;} /&gt;
+      &lt;<span class="component">Route</span> <span class="attr">path</span>=<span class="string">"/profile"</span> <span class="attr">element</span>={&lt;<span class="component">UserProfile</span> /&gt;} /&gt;
+      &lt;<span class="component">Route</span> <span class="attr">path</span>=<span class="string">"/reports"</span> <span class="attr">element</span>={&lt;<span class="component">Reports</span> /&gt;} /&gt;
+    &lt;/<span class="component">Routes</span>&gt;
+  );
+}</code></pre>
+
+<h2>Before vs. After</h2>
+
+<div class="diagram">
+  <svg viewBox="0 0 800 380" xmlns="http://www.w3.org/2000/svg" font-family="Inter, sans-serif">
+    <!-- LEFT SIDE: Without Code Splitting -->
+    <text x="190" y="30" text-anchor="middle" font-size="15" font-weight="700" fill="#dc2626">Without Code Splitting</text>
+
+    <rect x="40" y="50" width="300" height="280" rx="12" fill="#fef2f2" stroke="#fca5a5" stroke-width="2"/>
+    <text x="190" y="80" text-anchor="middle" font-size="14" font-weight="700" fill="#dc2626">bundle.js</text>
+    <text x="190" y="100" text-anchor="middle" font-size="12" font-weight="600" fill="#ef4444">2.5 MB — loaded upfront</text>
+
+    <rect x="60" y="115" width="260" height="30" rx="6" fill="#fee2e2" stroke="#fca5a5" stroke-width="1"/>
+    <text x="190" y="135" text-anchor="middle" font-size="11" fill="#991b1b">Dashboard (200KB)</text>
+
+    <rect x="60" y="150" width="260" height="30" rx="6" fill="#fee2e2" stroke="#fca5a5" stroke-width="1"/>
+    <text x="190" y="170" text-anchor="middle" font-size="11" fill="#991b1b">AdminPanel (400KB)</text>
+
+    <rect x="60" y="185" width="260" height="30" rx="6" fill="#fee2e2" stroke="#fca5a5" stroke-width="1"/>
+    <text x="190" y="205" text-anchor="middle" font-size="11" fill="#991b1b">Analytics + Charts (300KB)</text>
+
+    <rect x="60" y="220" width="260" height="30" rx="6" fill="#fee2e2" stroke="#fca5a5" stroke-width="1"/>
+    <text x="190" y="240" text-anchor="middle" font-size="11" fill="#991b1b">Reports + PDF lib (250KB)</text>
+
+    <rect x="60" y="255" width="260" height="30" rx="6" fill="#fee2e2" stroke="#fca5a5" stroke-width="1"/>
+    <text x="190" y="275" text-anchor="middle" font-size="11" fill="#991b1b">Settings (200KB)</text>
+
+    <rect x="60" y="290" width="260" height="30" rx="6" fill="#fee2e2" stroke="#fca5a5" stroke-width="1"/>
+    <text x="190" y="310" text-anchor="middle" font-size="11" fill="#991b1b">UserProfile (150KB)</text>
+
+    <text x="190" y="355" text-anchor="middle" font-size="12" fill="#dc2626" font-weight="600">User waits for ALL code</text>
+
+    <!-- RIGHT SIDE: With Code Splitting -->
+    <text x="600" y="30" text-anchor="middle" font-size="15" font-weight="700" fill="#16a34a">With Code Splitting</text>
+
+    <!-- Main bundle -->
+    <rect x="470" y="50" width="260" height="70" rx="12" fill="#f0fdf4" stroke="#86efac" stroke-width="2"/>
+    <text x="600" y="78" text-anchor="middle" font-size="14" font-weight="700" fill="#16a34a">main.js</text>
+    <text x="600" y="98" text-anchor="middle" font-size="12" font-weight="600" fill="#16a34a">200KB — loaded upfront</text>
+
+    <!-- Lazy chunks -->
+    <rect x="470" y="140" width="125" height="50" rx="8" fill="#fff" stroke="#86efac" stroke-width="1.5" stroke-dasharray="6,3"/>
+    <text x="532" y="163" text-anchor="middle" font-size="10" fill="#64748b">admin.js</text>
+    <text x="532" y="178" text-anchor="middle" font-size="10" font-weight="600" fill="#16a34a">400KB</text>
+
+    <rect x="605" y="140" width="125" height="50" rx="8" fill="#fff" stroke="#86efac" stroke-width="1.5" stroke-dasharray="6,3"/>
+    <text x="667" y="163" text-anchor="middle" font-size="10" fill="#64748b">analytics.js</text>
+    <text x="667" y="178" text-anchor="middle" font-size="10" font-weight="600" fill="#16a34a">300KB</text>
+
+    <rect x="470" y="200" width="125" height="50" rx="8" fill="#fff" stroke="#86efac" stroke-width="1.5" stroke-dasharray="6,3"/>
+    <text x="532" y="223" text-anchor="middle" font-size="10" fill="#64748b">reports.js</text>
+    <text x="532" y="238" text-anchor="middle" font-size="10" font-weight="600" fill="#16a34a">250KB</text>
+
+    <rect x="605" y="200" width="125" height="50" rx="8" fill="#fff" stroke="#86efac" stroke-width="1.5" stroke-dasharray="6,3"/>
+    <text x="667" y="223" text-anchor="middle" font-size="10" fill="#64748b">settings.js</text>
+    <text x="667" y="238" text-anchor="middle" font-size="10" font-weight="600" fill="#16a34a">200KB</text>
+
+    <!-- Arrows -->
+    <defs>
+      <marker id="arrowLazy" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+        <path d="M 0 0 L 10 5 L 0 10 z" fill="#86efac"/>
+      </marker>
+    </defs>
+
+    <line x1="530" y1="120" x2="530" y2="140" stroke="#86efac" stroke-width="1.5" stroke-dasharray="4,2" marker-end="url(#arrowLazy)"/>
+    <line x1="665" y1="120" x2="665" y2="140" stroke="#86efac" stroke-width="1.5" stroke-dasharray="4,2" marker-end="url(#arrowLazy)"/>
+    <line x1="530" y1="120" x2="530" y2="200" stroke="#86efac" stroke-width="1.5" stroke-dasharray="4,2" marker-end="url(#arrowLazy)"/>
+    <line x1="665" y1="120" x2="665" y2="200" stroke="#86efac" stroke-width="1.5" stroke-dasharray="4,2" marker-end="url(#arrowLazy)"/>
+
+    <text x="600" y="280" text-anchor="middle" font-size="11" fill="#64748b" font-style="italic">Dashed = loaded on demand</text>
+
+    <text x="600" y="315" text-anchor="middle" font-size="12" fill="#16a34a" font-weight="600">User only downloads what</text>
+    <text x="600" y="335" text-anchor="middle" font-size="12" fill="#16a34a" font-weight="600">they actually need</text>
+
+    <text x="600" y="365" text-anchor="middle" font-size="12" fill="#16a34a">Initial load: 200KB vs 2.5MB = 12x smaller</text>
+  </svg>
+</div>
+
+<h2>The Solution</h2>
+
+<div class="solution-box">
+  <h3>React.lazy + Suspense</h3>
+  <p>Use <code>React.lazy()</code> to dynamically import components and <code>Suspense</code> to show a fallback while the code loads. The bundler (Webpack, Vite, etc.) automatically creates separate chunks for each lazy import.</p>
+</div>
+
+<h3>Strategy 1: Route-Based Splitting (Most Common)</h3>
+
+<p>Split at the route level &mdash; each page becomes its own chunk, loaded only when the user navigates to it.</p>
+
+<pre><code><span class="keyword">import</span> { Suspense, lazy } <span class="keyword">from</span> <span class="string">'react'</span>;
+<span class="keyword">import</span> { Routes, Route } <span class="keyword">from</span> <span class="string">'react-router-dom'</span>;
+<span class="keyword">import</span> <span class="component">Spinner</span> <span class="keyword">from</span> <span class="string">'./components/Spinner'</span>; <span class="comment">// Keep in main bundle</span>
+
+<span class="comment">// Each of these creates a separate JS chunk</span>
+<span class="keyword">const</span> <span class="component">Dashboard</span> = <span class="function">lazy</span>(() => <span class="keyword">import</span>(<span class="string">'./pages/Dashboard'</span>));
+<span class="keyword">const</span> <span class="component">AdminPanel</span> = <span class="function">lazy</span>(() => <span class="keyword">import</span>(<span class="string">'./pages/AdminPanel'</span>));
+<span class="keyword">const</span> <span class="component">Settings</span> = <span class="function">lazy</span>(() => <span class="keyword">import</span>(<span class="string">'./pages/Settings'</span>));
+<span class="keyword">const</span> <span class="component">Analytics</span> = <span class="function">lazy</span>(() => <span class="keyword">import</span>(<span class="string">'./pages/Analytics'</span>));
+<span class="keyword">const</span> <span class="component">UserProfile</span> = <span class="function">lazy</span>(() => <span class="keyword">import</span>(<span class="string">'./pages/UserProfile'</span>));
+<span class="keyword">const</span> <span class="component">Reports</span> = <span class="function">lazy</span>(() => <span class="keyword">import</span>(<span class="string">'./pages/Reports'</span>));
+
+<span class="keyword">function</span> <span class="component">App</span>() {
+  <span class="keyword">return</span> (
+    <span class="comment">{/* Suspense shows a fallback while the lazy component loads */}</span>
+    &lt;<span class="component">Suspense</span> <span class="attr">fallback</span>={&lt;<span class="component">Spinner</span> /&gt;}&gt;
+      &lt;<span class="component">Routes</span>&gt;
+        &lt;<span class="component">Route</span> <span class="attr">path</span>=<span class="string">"/"</span> <span class="attr">element</span>={&lt;<span class="component">Dashboard</span> /&gt;} /&gt;
+        &lt;<span class="component">Route</span> <span class="attr">path</span>=<span class="string">"/admin"</span> <span class="attr">element</span>={&lt;<span class="component">AdminPanel</span> /&gt;} /&gt;
+        &lt;<span class="component">Route</span> <span class="attr">path</span>=<span class="string">"/settings"</span> <span class="attr">element</span>={&lt;<span class="component">Settings</span> /&gt;} /&gt;
+        &lt;<span class="component">Route</span> <span class="attr">path</span>=<span class="string">"/analytics"</span> <span class="attr">element</span>={&lt;<span class="component">Analytics</span> /&gt;} /&gt;
+        &lt;<span class="component">Route</span> <span class="attr">path</span>=<span class="string">"/profile"</span> <span class="attr">element</span>={&lt;<span class="component">UserProfile</span> /&gt;} /&gt;
+        &lt;<span class="component">Route</span> <span class="attr">path</span>=<span class="string">"/reports"</span> <span class="attr">element</span>={&lt;<span class="component">Reports</span> /&gt;} /&gt;
+      &lt;/<span class="component">Routes</span>&gt;
+    &lt;/<span class="component">Suspense</span>&gt;
+  );
+}</code></pre>
+
+<h3>Strategy 2: Component-Based Splitting</h3>
+
+<p>Lazy load heavy components within a page &mdash; useful for tabs, modals, or conditionally shown content.</p>
+
+<pre><code><span class="keyword">const</span> <span class="component">HeavyChart</span> = <span class="function">lazy</span>(() => <span class="keyword">import</span>(<span class="string">'./components/HeavyChart'</span>));
+
+<span class="keyword">function</span> <span class="component">AnalyticsPage</span>() {
+  <span class="keyword">const</span> [activeTab, <span class="function">setActiveTab</span>] = <span class="function">useState</span>(<span class="string">'overview'</span>);
+
+  <span class="keyword">return</span> (
+    &lt;<span class="tag">div</span>&gt;
+      &lt;<span class="tag">nav</span>&gt;
+        &lt;<span class="tag">button</span> <span class="attr">onClick</span>={() => <span class="function">setActiveTab</span>(<span class="string">'overview'</span>)}&gt;Overview&lt;/<span class="tag">button</span>&gt;
+        &lt;<span class="tag">button</span> <span class="attr">onClick</span>={() => <span class="function">setActiveTab</span>(<span class="string">'charts'</span>)}&gt;Charts&lt;/<span class="tag">button</span>&gt;
+      &lt;/<span class="tag">nav</span>&gt;
+
+      {activeTab === <span class="string">'overview'</span> &amp;&amp; &lt;<span class="component">Overview</span> /&gt;}
+
+      {activeTab === <span class="string">'charts'</span> &amp;&amp; (
+        <span class="comment">{/* Chart library (300KB) only loads when user clicks the Charts tab */}</span>
+        &lt;<span class="component">Suspense</span> <span class="attr">fallback</span>={&lt;<span class="tag">div</span>&gt;Loading charts...&lt;/<span class="tag">div</span>&gt;}&gt;
+          &lt;<span class="component">HeavyChart</span> <span class="attr">data</span>={analyticsData} /&gt;
+        &lt;/<span class="component">Suspense</span>&gt;
+      )}
+    &lt;/<span class="tag">div</span>&gt;
+  );
+}</code></pre>
+
+<h3>Strategy 3: Error Handling with Lazy Loading</h3>
+
+<p>Network requests can fail. Wrap lazy-loaded components with an error boundary to handle loading failures gracefully.</p>
+
+<pre><code><span class="keyword">import</span> { Component, Suspense, lazy } <span class="keyword">from</span> <span class="string">'react'</span>;
+
+<span class="comment">// A reusable error boundary for lazy-loaded components</span>
+<span class="keyword">class</span> <span class="component">LazyErrorBoundary</span> <span class="keyword">extends</span> <span class="component">Component</span> {
+  state = { hasError: <span class="keyword">false</span> };
+
+  <span class="keyword">static</span> <span class="function">getDerivedStateFromError</span>() {
+    <span class="keyword">return</span> { hasError: <span class="keyword">true</span> };
+  }
+
+  <span class="function">render</span>() {
+    <span class="keyword">if</span> (<span class="keyword">this</span>.state.hasError) {
+      <span class="keyword">return</span> (
+        &lt;<span class="tag">div</span> <span class="attr">style</span>={{ padding: <span class="string">'2rem'</span>, textAlign: <span class="string">'center'</span> }}&gt;
+          &lt;<span class="tag">p</span>&gt;Failed to load this section.&lt;/<span class="tag">p</span>&gt;
+          &lt;<span class="tag">button</span> <span class="attr">onClick</span>={() => {
+            <span class="keyword">this</span>.<span class="function">setState</span>({ hasError: <span class="keyword">false</span> });
+            window.location.<span class="function">reload</span>();
+          }}&gt;
+            Retry
+          &lt;/<span class="tag">button</span>&gt;
+        &lt;/<span class="tag">div</span>&gt;
+      );
+    }
+    <span class="keyword">return</span> <span class="keyword">this</span>.props.children;
+  }
+}
+
+<span class="comment">// Usage: wrap Suspense with the error boundary</span>
+<span class="keyword">const</span> <span class="component">AdminPanel</span> = <span class="function">lazy</span>(() => <span class="keyword">import</span>(<span class="string">'./pages/AdminPanel'</span>));
+
+<span class="keyword">function</span> <span class="component">App</span>() {
+  <span class="keyword">return</span> (
+    &lt;<span class="component">LazyErrorBoundary</span>&gt;
+      &lt;<span class="component">Suspense</span> <span class="attr">fallback</span>={&lt;<span class="component">Spinner</span> /&gt;}&gt;
+        &lt;<span class="component">AdminPanel</span> /&gt;
+      &lt;/<span class="component">Suspense</span>&gt;
+    &lt;/<span class="component">LazyErrorBoundary</span>&gt;
+  );
+}</code></pre>
+
+<h3>Strategy 4: Library-Based Splitting</h3>
+
+<p>Heavy third-party libraries can be split out so they only load when needed.</p>
+
+<pre><code><span class="comment">// Instead of importing the heavy library at the top level...</span>
+<span class="comment">// import { PDFDocument } from 'pdf-lib'; // 500KB!</span>
+
+<span class="comment">// ...import it dynamically only when the user needs it</span>
+<span class="keyword">function</span> <span class="component">ReportsPage</span>() {
+  <span class="keyword">const</span> [generating, <span class="function">setGenerating</span>] = <span class="function">useState</span>(<span class="keyword">false</span>);
+
+  <span class="keyword">async function</span> <span class="function">handleGeneratePDF</span>() {
+    <span class="function">setGenerating</span>(<span class="keyword">true</span>);
+
+    <span class="comment">// Library is fetched only when this function runs</span>
+    <span class="keyword">const</span> { PDFDocument } = <span class="keyword">await</span> <span class="keyword">import</span>(<span class="string">'pdf-lib'</span>);
+
+    <span class="keyword">const</span> doc = <span class="keyword">await</span> PDFDocument.<span class="function">create</span>();
+    <span class="comment">// ...generate PDF</span>
+    <span class="function">setGenerating</span>(<span class="keyword">false</span>);
+  }
+
+  <span class="keyword">return</span> (
+    &lt;<span class="tag">button</span> <span class="attr">onClick</span>={<span class="function">handleGeneratePDF</span>} <span class="attr">disabled</span>={generating}&gt;
+      {generating ? <span class="string">'Generating...'</span> : <span class="string">'Export PDF'</span>}
+    &lt;/<span class="tag">button</span>&gt;
+  );
+}</code></pre>
+
+<h2>Splitting Strategies Compared</h2>
+
+<div class="card-row">
+  <div class="card">
+    <h4>Route-Based</h4>
+    <p>Split at page/route boundaries. Easiest to implement and gives the biggest impact. <strong>Start here.</strong></p>
+  </div>
+  <div class="card">
+    <h4>Component-Based</h4>
+    <p>Split heavy components within a page (modals, tabs, below-the-fold content). Good for large pages.</p>
+  </div>
+</div>
+<div class="card-row">
+  <div class="card">
+    <h4>Library-Based</h4>
+    <p>Dynamically import heavy third-party libraries only when the feature that uses them is triggered.</p>
+  </div>
+  <div class="card">
+    <h4>Prefetching</h4>
+    <p>Preload chunks on hover or idle time: <code>import('./Admin')</code> on link hover, so it's ready before the click.</p>
+  </div>
+</div>
+
+<h2>When to Use</h2>
+
+<div class="card-row">
+  <div class="card do-card">
+    <h4>Use When</h4>
+    <ul>
+      <li>Large applications with many routes</li>
+      <li>Routes with heavy components (admin panels, dashboards)</li>
+      <li>Rarely visited pages (settings, reports)</li>
+      <li>Heavy third-party libraries (charts, PDF, editors)</li>
+      <li>You want to improve initial load time</li>
+    </ul>
+  </div>
+  <div class="card dont-card">
+    <h4>Avoid When</h4>
+    <ul>
+      <li>Small apps where the total bundle is already small</li>
+      <li>Components that are always visible on initial load</li>
+      <li>Above-the-fold critical content (users see a flash)</li>
+      <li>Micro-optimizing tiny components (overhead not worth it)</li>
+    </ul>
+  </div>
+</div>
+
+<div class="key-takeaway">
+  <h3>Key Takeaway</h3>
+  <p>Code splitting is the <strong>single biggest performance win</strong> for most React apps. Start with route-based splitting &mdash; it's easy to implement and gives the most benefit. Every <code>React.lazy()</code> call tells the bundler "put this in a separate file and load it only when needed." Combine with <code>Suspense</code> for a smooth loading experience, and always add an error boundary for resilience.</p>
+</div>
+
+<nav class="nav">
+  <a href="07-memoization.html">&larr; Memoization</a>
+  <a href="09-context-module.html">Context Module &rarr;</a>
+</nav>
+
+</body>
+</html>

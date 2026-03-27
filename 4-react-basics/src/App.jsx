@@ -4,7 +4,6 @@ import {
 } from 'react'
 
 import Message from './components/Message.jsx'
-import { Button } from 'bootstrap'
 
 function App() {
   console.log("App :: rendered")

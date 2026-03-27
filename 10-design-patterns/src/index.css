@@ -1,0 +1,15 @@
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  background: #f0f2f5;
+  color: #1a1a2e;
+}
+
+#root {
+  max-width: 100%;
+  min-height: 100vh;
+}

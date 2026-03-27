@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>React Patterns — A Trainer's Guide</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --accent: #6366f1;
+      --accent-light: #eef2ff;
+      --problem-bg: #fff7ed;
+      --problem-border: #fb923c;
+      --solution-bg: #f0fdf4;
+      --solution-border: #4ade80;
+      --code-bg: #1e1e2e;
+      --code-text: #cdd6f4;
+      --text: #1e293b;
+      --text-light: #64748b;
+      --surface: #ffffff;
+      --border: #e2e8f0;
+      --font: 'Inter', -apple-system, sans-serif;
+      --mono: 'Fira Code', 'Consolas', monospace;
+    }
+    body { font-family: var(--font); color: var(--text); line-height: 1.7; max-width: 960px; margin: 0 auto; padding: 2rem; background: #fafbfc; }
+    h1 { font-size: 2.5rem; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 0.5rem; }
+    h2 { font-size: 1.5rem; font-weight: 700; margin: 2.5rem 0 1rem; color: var(--accent); }
+    h3 { font-size: 1.15rem; font-weight: 600; margin: 1.5rem 0 0.75rem; }
+    p, li { font-size: 1.05rem; margin-bottom: 0.75rem; }
+    ul { padding-left: 1.5rem; }
+    .badge { display: inline-block; background: var(--accent); color: #fff; font-size: 0.8rem; font-weight: 600; padding: 0.25rem 0.75rem; border-radius: 999px; margin-bottom: 1rem; letter-spacing: 0.05em; text-transform: uppercase; }
+    .subtitle { font-size: 1.25rem; color: var(--text-light); font-weight: 400; margin-bottom: 2rem; }
+    pre { background: var(--code-bg); color: var(--code-text); padding: 1.5rem; border-radius: 10px; overflow-x: auto; margin: 1rem 0; font-size: 0.92rem; line-height: 1.6; }
+    code { font-family: var(--mono); font-size: 0.9em; }
+    :not(pre) > code { background: #f1f5f9; padding: 0.15em 0.4em; border-radius: 4px; color: var(--accent); }
+    .diagram { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 2rem; margin: 2rem 0; text-align: center; }
+    .diagram svg { max-width: 100%; height: auto; }
+    .nav { display: flex; justify-content: space-between; padding: 1rem 0; border-top: 1px solid var(--border); margin-top: 3rem; font-size: 0.95rem; }
+    .nav a { color: var(--accent); text-decoration: none; font-weight: 500; }
+    .nav a:hover { text-decoration: underline; }
+    .top-nav { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border); }
+    .top-nav a { color: var(--text-light); text-decoration: none; font-size: 0.85rem; padding: 0.3rem 0.7rem; border-radius: 6px; background: #f1f5f9; transition: all 0.2s; }
+    .top-nav a:hover, .top-nav a.active { background: var(--accent); color: #fff; }
+    .key-takeaway { background: var(--accent-light); border-radius: 12px; padding: 1.5rem 2rem; margin: 2rem 0; }
+    .key-takeaway h3 { color: var(--accent); margin-top: 0; }
+    @media print { body { max-width: 100%; } .top-nav, .nav { display: none; } }
+
+    /* Index-specific styles */
+    .hero { text-align: center; padding: 3rem 0 2rem; }
+    .hero h1 { font-size: 3rem; background: linear-gradient(135deg, #6366f1, #8b5cf6, #a855f7); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .hero .subtitle { font-size: 1.3rem; max-width: 600px; margin: 0.75rem auto 1.5rem; }
+    .intro { max-width: 720px; margin: 0 auto 2.5rem; text-align: center; color: var(--text-light); font-size: 1.08rem; line-height: 1.8; }
+    .category-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin: 2rem 0; }
+    @media (max-width: 700px) { .category-grid { grid-template-columns: 1fr; } }
+    .category-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 1.75rem; transition: box-shadow 0.2s, transform 0.2s; }
+    .category-card:hover { box-shadow: 0 8px 30px rgba(0,0,0,0.08); transform: translateY(-2px); }
+    .category-card h3 { margin-top: 0; font-size: 1.15rem; margin-bottom: 0.25rem; }
+    .category-card .cat-label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 1rem; display: block; }
+    .category-card ul { list-style: none; padding: 0; }
+    .category-card li { margin-bottom: 0.5rem; }
+    .category-card a { color: var(--text); text-decoration: none; font-weight: 500; font-size: 1rem; display: flex; align-items: center; gap: 0.5rem; padding: 0.4rem 0.6rem; border-radius: 8px; transition: background 0.15s; }
+    .category-card a:hover { background: var(--accent-light); color: var(--accent); }
+    .category-card a .num { color: var(--text-light); font-size: 0.85rem; font-family: var(--mono); min-width: 1.5rem; }
+    .cat-component { border-top: 4px solid #6366f1; }
+    .cat-component .cat-label { color: #6366f1; }
+    .cat-logic { border-top: 4px solid #f59e0b; }
+    .cat-logic .cat-label { color: #f59e0b; }
+    .cat-performance { border-top: 4px solid #10b981; }
+    .cat-performance .cat-label { color: #10b981; }
+  </style>
+</head>
+<body>
+
+  <nav class="top-nav">
+    <a href="index.html" class="active">Index</a>
+    <a href="01-compound-components.html">Compound Components</a>
+    <a href="02-render-props.html">Render Props</a>
+    <a href="03-higher-order-components.html">HOC</a>
+    <a href="04-custom-hooks.html">Custom Hooks</a>
+    <a href="05-container-presentational.html">Container/Presentational</a>
+    <a href="06-state-reducer.html">State Reducer</a>
+    <a href="07-memoization.html">Memoization</a>
+    <a href="08-code-splitting.html">Code Splitting</a>
+    <a href="09-context-module.html">Context Module</a>
+    <a href="10-lazy-loading.html">Lazy Loading</a>
+    <a href="11-slot-pattern.html">Slot Pattern</a>
+  </nav>
+
+  <header class="hero">
+    <span class="badge">11 Patterns</span>
+    <h1>React Patterns</h1>
+    <p class="subtitle">A Trainer's Guide</p>
+    <p style="color: var(--text-light); font-size: 1.1rem;">Problem &rarr; Solution approach to mastering React design patterns</p>
+  </header>
+
+  <p class="intro">
+    Design patterns are battle-tested solutions to recurring problems. In React, patterns help you write
+    components that are <strong>reusable</strong>, <strong>composable</strong>, and <strong>maintainable</strong>.
+    Each pattern in this guide is presented as a real problem you will face, followed by a clean,
+    idiomatic solution. Understanding <em>when</em> and <em>when not</em> to apply a pattern is just as
+    important as knowing how it works.
+  </p>
+
+  <div class="category-grid">
+    <div class="category-card cat-component">
+      <span class="cat-label">Component Patterns</span>
+      <h3>Structure &amp; Composition</h3>
+      <p style="font-size: 0.93rem; color: var(--text-light); margin-bottom: 1rem;">Patterns for building flexible, composable component APIs.</p>
+      <ul>
+        <li><a href="01-compound-components.html"><span class="num">01</span> Compound Components</a></li>
+        <li><a href="02-render-props.html"><span class="num">02</span> Render Props</a></li>
+        <li><a href="03-higher-order-components.html"><span class="num">03</span> Higher-Order Components</a></li>
+        <li><a href="11-slot-pattern.html"><span class="num">11</span> Slot Pattern</a></li>
+      </ul>
+    </div>
+    <div class="category-card cat-logic">
+      <span class="cat-label">Logic Patterns</span>
+      <h3>State &amp; Behavior</h3>
+      <p style="font-size: 0.93rem; color: var(--text-light); margin-bottom: 1rem;">Patterns for sharing and organizing logic across components.</p>
+      <ul>
+        <li><a href="04-custom-hooks.html"><span class="num">04</span> Custom Hooks</a></li>
+        <li><a href="05-container-presentational.html"><span class="num">05</span> Container / Presentational</a></li>
+        <li><a href="06-state-reducer.html"><span class="num">06</span> State Reducer</a></li>
+      </ul>
+    </div>
+    <div class="category-card cat-performance">
+      <span class="cat-label">Performance Patterns</span>
+      <h3>Speed &amp; Efficiency</h3>
+      <p style="font-size: 0.93rem; color: var(--text-light); margin-bottom: 1rem;">Patterns for optimizing rendering and bundle size.</p>
+      <ul>
+        <li><a href="07-memoization.html"><span class="num">07</span> Memoization</a></li>
+        <li><a href="08-code-splitting.html"><span class="num">08</span> Code Splitting</a></li>
+        <li><a href="09-context-module.html"><span class="num">09</span> Context Module</a></li>
+        <li><a href="10-lazy-loading.html"><span class="num">10</span> Lazy Loading</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <h2>Pattern Roadmap</h2>
+  <div class="diagram">
+    <svg viewBox="0 0 900 420" xmlns="http://www.w3.org/2000/svg" font-family="Inter, sans-serif">
+      <!-- Column backgrounds -->
+      <rect x="10" y="10" width="280" height="400" rx="16" fill="#eef2ff" stroke="#c7d2fe" stroke-width="1.5"/>
+      <rect x="310" y="10" width="280" height="400" rx="16" fill="#fef9c3" stroke="#fde68a" stroke-width="1.5"/>
+      <rect x="610" y="10" width="280" height="400" rx="16" fill="#d1fae5" stroke="#6ee7b7" stroke-width="1.5"/>
+
+      <!-- Column headers -->
+      <rect x="40" y="30" width="220" height="40" rx="8" fill="#6366f1"/>
+      <text x="150" y="56" text-anchor="middle" fill="#fff" font-size="15" font-weight="700">Component Patterns</text>
+
+      <rect x="340" y="30" width="220" height="40" rx="8" fill="#f59e0b"/>
+      <text x="450" y="56" text-anchor="middle" fill="#fff" font-size="15" font-weight="700">Logic Patterns</text>
+
+      <rect x="640" y="30" width="220" height="40" rx="8" fill="#10b981"/>
+      <text x="750" y="56" text-anchor="middle" fill="#fff" font-size="15" font-weight="700">Performance Patterns</text>
+
+      <!-- Component pattern items -->
+      <rect x="40" y="90" width="220" height="50" rx="10" fill="#fff" stroke="#c7d2fe" stroke-width="1"/>
+      <text x="60" y="112" fill="#64748b" font-size="12" font-family="Fira Code, monospace">01</text>
+      <text x="85" y="112" fill="#1e293b" font-size="14" font-weight="600">Compound Components</text>
+      <text x="60" y="128" fill="#64748b" font-size="11">Implicit state sharing</text>
+
+      <rect x="40" y="155" width="220" height="50" rx="10" fill="#fff" stroke="#c7d2fe" stroke-width="1"/>
+      <text x="60" y="177" fill="#64748b" font-size="12" font-family="Fira Code, monospace">02</text>
+      <text x="85" y="177" fill="#1e293b" font-size="14" font-weight="600">Render Props</text>
+      <text x="60" y="193" fill="#64748b" font-size="11">Function-as-child pattern</text>
+
+      <rect x="40" y="220" width="220" height="50" rx="10" fill="#fff" stroke="#c7d2fe" stroke-width="1"/>
+      <text x="60" y="242" fill="#64748b" font-size="12" font-family="Fira Code, monospace">03</text>
+      <text x="85" y="242" fill="#1e293b" font-size="14" font-weight="600">Higher-Order Components</text>
+      <text x="60" y="258" fill="#64748b" font-size="11">Component enhancers</text>
+
+      <rect x="40" y="285" width="220" height="50" rx="10" fill="#fff" stroke="#c7d2fe" stroke-width="1"/>
+      <text x="60" y="307" fill="#64748b" font-size="12" font-family="Fira Code, monospace">11</text>
+      <text x="85" y="307" fill="#1e293b" font-size="14" font-weight="600">Slot Pattern</text>
+      <text x="60" y="323" fill="#64748b" font-size="11">Named content placeholders</text>
+
+      <!-- Logic pattern items -->
+      <rect x="340" y="90" width="220" height="50" rx="10" fill="#fff" stroke="#fde68a" stroke-width="1"/>
+      <text x="360" y="112" fill="#64748b" font-size="12" font-family="Fira Code, monospace">04</text>
+      <text x="385" y="112" fill="#1e293b" font-size="14" font-weight="600">Custom Hooks</text>
+      <text x="360" y="128" fill="#64748b" font-size="11">Reusable stateful logic</text>
+
+      <rect x="340" y="155" width="220" height="50" rx="10" fill="#fff" stroke="#fde68a" stroke-width="1"/>
+      <text x="360" y="177" fill="#64748b" font-size="12" font-family="Fira Code, monospace">05</text>
+      <text x="385" y="177" fill="#1e293b" font-size="14" font-weight="600">Container / Presentational</text>
+      <text x="360" y="193" fill="#64748b" font-size="11">Separation of concerns</text>
+
+      <rect x="340" y="220" width="220" height="50" rx="10" fill="#fff" stroke="#fde68a" stroke-width="1"/>
+      <text x="360" y="242" fill="#64748b" font-size="12" font-family="Fira Code, monospace">06</text>
+      <text x="385" y="242" fill="#1e293b" font-size="14" font-weight="600">State Reducer</text>
+      <text x="360" y="258" fill="#64748b" font-size="11">Inversion of control for state</text>
+
+      <!-- Performance pattern items -->
+      <rect x="640" y="90" width="220" height="50" rx="10" fill="#fff" stroke="#6ee7b7" stroke-width="1"/>
+      <text x="660" y="112" fill="#64748b" font-size="12" font-family="Fira Code, monospace">07</text>
+      <text x="685" y="112" fill="#1e293b" font-size="14" font-weight="600">Memoization</text>
+      <text x="660" y="128" fill="#64748b" font-size="11">Avoid unnecessary re-renders</text>
+
+      <rect x="640" y="155" width="220" height="50" rx="10" fill="#fff" stroke="#6ee7b7" stroke-width="1"/>
+      <text x="660" y="177" fill="#64748b" font-size="12" font-family="Fira Code, monospace">08</text>
+      <text x="685" y="177" fill="#1e293b" font-size="14" font-weight="600">Code Splitting</text>
+      <text x="660" y="193" fill="#64748b" font-size="11">Lazy loading components</text>
+
+      <rect x="640" y="220" width="220" height="50" rx="10" fill="#fff" stroke="#6ee7b7" stroke-width="1"/>
+      <text x="660" y="242" fill="#64748b" font-size="12" font-family="Fira Code, monospace">09</text>
+      <text x="685" y="242" fill="#1e293b" font-size="14" font-weight="600">Context Module</text>
+      <text x="660" y="258" fill="#64748b" font-size="11">Encapsulated context + actions</text>
+
+      <rect x="640" y="285" width="220" height="50" rx="10" fill="#fff" stroke="#6ee7b7" stroke-width="1"/>
+      <text x="660" y="307" fill="#64748b" font-size="12" font-family="Fira Code, monospace">10</text>
+      <text x="685" y="307" fill="#1e293b" font-size="14" font-weight="600">Lazy Loading</text>
+      <text x="660" y="323" fill="#64748b" font-size="11">On-demand component loading</text>
+
+      <!-- Arrows connecting columns -->
+      <defs>
+        <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="#94a3b8"/>
+        </marker>
+      </defs>
+      <line x1="290" y1="200" x2="310" y2="200" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrow)" stroke-dasharray="6,3"/>
+      <line x1="590" y1="200" x2="610" y2="200" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrow)" stroke-dasharray="6,3"/>
+
+      <!-- Bottom label -->
+      <rect x="280" y="340" width="340" height="50" rx="12" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+      <text x="450" y="362" text-anchor="middle" fill="#64748b" font-size="13" font-weight="500">Recommended learning order: left to right,</text>
+      <text x="450" y="380" text-anchor="middle" fill="#64748b" font-size="13" font-weight="500">top to bottom within each category</text>
+    </svg>
+  </div>
+
+  <div class="key-takeaway">
+    <h3>How to use this guide</h3>
+    <p>Each pattern page follows the same structure: understand the <strong>Problem</strong> first, then see the <strong>Solution</strong> with real code. Pay special attention to the "When to Use" and "When NOT to Use" sections to develop good judgment about pattern selection.</p>
+  </div>
+
+  <nav class="nav">
+    <span style="color: var(--text-light);">You are at the index</span>
+    <a href="01-compound-components.html">Start: Compound Components &rarr;</a>
+  </nav>
+
+</body>
+</html>

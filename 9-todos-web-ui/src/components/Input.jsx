@@ -33,6 +33,7 @@ function Input({ onEnter, onBlur, title, }) {
                     title: inputValue
                 });
             }
+            setInputValue('');
         }
     }
     return (

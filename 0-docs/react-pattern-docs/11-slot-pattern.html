@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slot Pattern | React Patterns</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --accent: #0891b2;
+      --accent-light: #ecfeff;
+      --problem-bg: #fff7ed;
+      --problem-border: #fb923c;
+      --solution-bg: #f0fdf4;
+      --solution-border: #4ade80;
+      --code-bg: #1e1e2e;
+      --code-text: #cdd6f4;
+      --text: #1e293b;
+      --text-light: #64748b;
+      --surface: #ffffff;
+      --border: #e2e8f0;
+      --font: 'Inter', -apple-system, sans-serif;
+      --mono: 'Fira Code', 'Consolas', monospace;
+    }
+    body { font-family: var(--font); color: var(--text); line-height: 1.7; max-width: 960px; margin: 0 auto; padding: 2rem; background: #fafbfc; }
+    h1 { font-size: 2.5rem; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 0.5rem; }
+    h2 { font-size: 1.5rem; font-weight: 700; margin: 2.5rem 0 1rem; color: var(--accent); }
+    h3 { font-size: 1.15rem; font-weight: 600; margin: 1.5rem 0 0.75rem; }
+    p, li { font-size: 1.05rem; margin-bottom: 0.75rem; }
+    ul { padding-left: 1.5rem; }
+    .badge { display: inline-block; background: var(--accent); color: #fff; font-size: 0.8rem; font-weight: 600; padding: 0.25rem 0.75rem; border-radius: 999px; margin-bottom: 1rem; letter-spacing: 0.05em; text-transform: uppercase; }
+    .subtitle { font-size: 1.25rem; color: var(--text-light); font-weight: 400; margin-bottom: 2rem; }
+    .problem-box, .solution-box { padding: 1.5rem 2rem; border-radius: 12px; margin: 1.5rem 0; border-left: 4px solid; }
+    .problem-box { background: var(--problem-bg); border-color: var(--problem-border); }
+    .problem-box h3::before { content: '\26A0 '; }
+    .solution-box { background: var(--solution-bg); border-color: var(--solution-border); }
+    .solution-box h3::before { content: '\2726 '; }
+    pre { background: var(--code-bg); color: var(--code-text); padding: 1.5rem; border-radius: 10px; overflow-x: auto; margin: 1rem 0; font-size: 0.92rem; line-height: 1.6; }
+    code { font-family: var(--mono); font-size: 0.9em; }
+    :not(pre) > code { background: #f1f5f9; padding: 0.15em 0.4em; border-radius: 4px; color: var(--accent); }
+    .diagram { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 2rem; margin: 2rem 0; text-align: center; }
+    .diagram svg { max-width: 100%; height: auto; }
+    .card-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin: 1.5rem 0; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1.25rem 1.5rem; }
+    .card h4 { font-weight: 600; margin-bottom: 0.5rem; }
+    .do-card { border-left: 4px solid #22c55e; }
+    .dont-card { border-left: 4px solid #ef4444; }
+    .nav { display: flex; justify-content: space-between; padding: 1rem 0; border-top: 1px solid var(--border); margin-top: 3rem; font-size: 0.95rem; }
+    .nav a { color: var(--accent); text-decoration: none; font-weight: 500; }
+    .nav a:hover { text-decoration: underline; }
+    .top-nav { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border); }
+    .top-nav a { color: var(--text-light); text-decoration: none; font-size: 0.85rem; padding: 0.3rem 0.7rem; border-radius: 6px; background: #f1f5f9; transition: all 0.2s; }
+    .top-nav a:hover, .top-nav a.active { background: var(--accent); color: #fff; }
+    .key-takeaway { background: var(--accent-light); border-radius: 12px; padding: 1.5rem 2rem; margin: 2rem 0; }
+    .key-takeaway h3 { color: var(--accent); margin-top: 0; }
+    .comment { color: #6a9955; }
+    .keyword { color: #c586c0; }
+    .function { color: #dcdcaa; }
+    .string { color: #ce9178; }
+    .component { color: #4ec9b0; }
+    .tag { color: #569cd6; }
+    .attr { color: #9cdcfe; }
+    table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.95rem; }
+    th, td { padding: 0.75rem 1rem; text-align: left; border-bottom: 1px solid var(--border); }
+    th { background: #f8fafc; font-weight: 600; color: var(--accent); }
+    tr:hover { background: #f8fafc; }
+    @media (max-width: 640px) { .card-row { grid-template-columns: 1fr; } }
+    @media print { body { max-width: 100%; } .top-nav, .nav { display: none; } }
+  </style>
+</head>
+<body>
+
+  <nav class="top-nav">
+    <a href="index.html">Index</a>
+    <a href="01-compound-components.html">Compound Components</a>
+    <a href="02-render-props.html">Render Props</a>
+    <a href="03-higher-order-components.html">HOCs</a>
+    <a href="04-custom-hooks.html">Custom Hooks</a>
+    <a href="05-container-presentational.html">Container/Presentational</a>
+    <a href="06-state-reducer.html">State Reducer</a>
+    <a href="07-memoization.html">Memoization</a>
+    <a href="08-code-splitting.html">Code Splitting</a>
+    <a href="09-context-module.html">Context Module</a>
+    <a href="10-lazy-loading.html">Lazy Loading</a>
+    <a href="11-slot-pattern.html" class="active">Slot Pattern</a>
+  </nav>
+
+  <span class="badge">Component Pattern</span>
+  <h1>Slot Pattern</h1>
+  <p class="subtitle">Create flexible, composable layouts by letting consumers inject content into predefined slots</p>
+
+  <p>
+    Inspired by <strong>Web Component <code>&lt;slot&gt;</code> elements</strong> and <strong>Vue.js named slots</strong>, the Slot Pattern adapts the same idea for React using props and children. It solves one of the most common design system challenges: building reusable layout components that are structured yet flexible.
+  </p>
+
+  <!-- ====== THE PROBLEM ====== -->
+  <h2>The Problem</h2>
+
+  <div class="problem-box">
+    <h3>Prop Explosion in Layout Components</h3>
+    <p>
+      You're building a reusable <code>Card</code>, <code>Dialog</code>, or <code>AppShell</code>. It has a fixed structure &mdash; header, body, footer &mdash; but consumers need to customize what goes in each area. Using a single <code>children</code> prop doesn't give enough control. You end up with either:
+    </p>
+    <ul>
+      <li><strong>Too many string/element props</strong> (<code>title</code>, <code>subtitle</code>, <code>headerIcon</code>, <code>headerAction</code>, <code>footerLeft</code>, <code>footerRight</code>&hellip;) &mdash; the dreaded <em>"prop explosion"</em> problem.</li>
+      <li>Or a <strong>rigid component</strong> that can't be customized at all, forcing consumers to build their own from scratch.</li>
+    </ul>
+  </div>
+
+  <h3>Before: A Card with Prop Explosion</h3>
+  <pre><code><span class="comment">// Card with 8+ individual props for every customizable area</span>
+<span class="keyword">function</span> <span class="component">Card</span>({
+  <span class="attr">title</span>,
+  <span class="attr">subtitle</span>,
+  <span class="attr">headerIcon</span>,
+  <span class="attr">headerAction</span>,
+  <span class="attr">badge</span>,
+  <span class="attr">badgeColor</span>,
+  <span class="attr">children</span>,
+  <span class="attr">footerPrimaryLabel</span>,
+  <span class="attr">footerPrimaryOnClick</span>,
+  <span class="attr">footerSecondaryLabel</span>,
+  <span class="attr">footerSecondaryOnClick</span>,
+  <span class="attr">footerAlign</span>,
+  <span class="attr">showDivider</span>,
+}) {
+  <span class="keyword">return</span> (
+    &lt;<span class="tag">div</span> <span class="attr">className</span>=<span class="string">"card"</span>&gt;
+      &lt;<span class="tag">div</span> <span class="attr">className</span>=<span class="string">"card-header"</span>&gt;
+        {headerIcon &amp;&amp; &lt;<span class="tag">span</span> <span class="attr">className</span>=<span class="string">"icon"</span>&gt;{headerIcon}&lt;/<span class="tag">span</span>&gt;}
+        &lt;<span class="tag">div</span>&gt;
+          {badge &amp;&amp; &lt;<span class="tag">span</span> <span class="attr">style</span>={{ color: badgeColor }}&gt;{badge}&lt;/<span class="tag">span</span>&gt;}
+          {title &amp;&amp; &lt;<span class="tag">h3</span>&gt;{title}&lt;/<span class="tag">h3</span>&gt;}
+          {subtitle &amp;&amp; &lt;<span class="tag">p</span>&gt;{subtitle}&lt;/<span class="tag">p</span>&gt;}
+        &lt;/<span class="tag">div</span>&gt;
+        {headerAction &amp;&amp; &lt;<span class="tag">button</span>&gt;{headerAction}&lt;/<span class="tag">button</span>&gt;}
+      &lt;/<span class="tag">div</span>&gt;
+      {showDivider &amp;&amp; &lt;<span class="tag">hr</span> /&gt;}
+      &lt;<span class="tag">div</span> <span class="attr">className</span>=<span class="string">"card-body"</span>&gt;{children}&lt;/<span class="tag">div</span>&gt;
+      &lt;<span class="tag">div</span> <span class="attr">className</span>=<span class="string">"card-footer"</span> <span class="attr">style</span>={{ justifyContent: footerAlign }}&gt;
+        {footerSecondaryLabel &amp;&amp; (
+          &lt;<span class="tag">button</span> <span class="attr">onClick</span>={footerSecondaryOnClick}&gt;{footerSecondaryLabel}&lt;/<span class="tag">button</span>&gt;
+        )}
+        {footerPrimaryLabel &amp;&amp; (
+          &lt;<span class="tag">button</span> <span class="attr">onClick</span>={footerPrimaryOnClick}&gt;{footerPrimaryLabel}&lt;/<span class="tag">button</span>&gt;
+        )}
+      &lt;/<span class="tag">div</span>&gt;
+    &lt;/<span class="tag">div</span>&gt;
+  );
+}
+
+<span class="comment">// Every new customization need = another prop = another update to Card</span>
+<span class="comment">// What if someone wants TWO badges? A dropdown in the header? A link in the footer?</span></code></pre>
+
+  <!-- ====== DIAGRAM ====== -->
+  <h2>How Slots Work</h2>
+
+  <div class="diagram">
+    <svg viewBox="0 0 800 420" xmlns="http://www.w3.org/2000/svg" font-family="Inter, sans-serif">
+      <!-- Layout Component -->
+      <rect x="40" y="20" width="340" height="380" rx="16" fill="#f0fdfa" stroke="#0891b2" stroke-width="2" />
+      <text x="210" y="52" text-anchor="middle" font-weight="700" font-size="16" fill="#0891b2">Layout Component</text>
+
+      <!-- Header Slot -->
+      <rect x="65" y="70" width="290" height="70" rx="10" fill="#ecfeff" stroke="#0891b2" stroke-width="1.5" stroke-dasharray="6 4" />
+      <text x="210" y="100" text-anchor="middle" font-size="13" fill="#64748b">header</text>
+      <text x="210" y="120" text-anchor="middle" font-size="11" fill="#94a3b8" font-style="italic">slot</text>
+
+      <!-- Body Slot -->
+      <rect x="65" y="155" width="290" height="100" rx="10" fill="#fff" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="6 4" />
+      <text x="210" y="200" text-anchor="middle" font-size="13" fill="#64748b">children / body</text>
+      <text x="210" y="220" text-anchor="middle" font-size="11" fill="#94a3b8" font-style="italic">slot</text>
+
+      <!-- Footer Slot -->
+      <rect x="65" y="270" width="290" height="70" rx="10" fill="#ecfeff" stroke="#0891b2" stroke-width="1.5" stroke-dasharray="6 4" />
+      <text x="210" y="300" text-anchor="middle" font-size="13" fill="#64748b">footer</text>
+      <text x="210" y="320" text-anchor="middle" font-size="11" fill="#94a3b8" font-style="italic">slot</text>
+
+      <!-- Consumer -->
+      <rect x="500" y="20" width="270" height="380" rx="16" fill="#fafbfc" stroke="#94a3b8" stroke-width="1.5" />
+      <text x="635" y="52" text-anchor="middle" font-weight="700" font-size="16" fill="#1e293b">Consumer</text>
+
+      <!-- Consumer: Breadcrumb -->
+      <rect x="525" y="75" width="220" height="50" rx="8" fill="#fff" stroke="#e2e8f0" stroke-width="1" />
+      <text x="635" y="100" text-anchor="middle" font-size="12" fill="#1e293b">Breadcrumb + Title</text>
+      <text x="635" y="115" text-anchor="middle" font-size="10" fill="#94a3b8">Home / Users / Profile</text>
+
+      <!-- Consumer: Form -->
+      <rect x="525" y="170" width="220" height="72" rx="8" fill="#fff" stroke="#e2e8f0" stroke-width="1" />
+      <text x="635" y="195" text-anchor="middle" font-size="12" fill="#1e293b">User Profile Form</text>
+      <text x="635" y="215" text-anchor="middle" font-size="10" fill="#94a3b8">Name, Email, Bio fields</text>
+      <text x="635" y="232" text-anchor="middle" font-size="10" fill="#94a3b8">with validation</text>
+
+      <!-- Consumer: Actions -->
+      <rect x="525" y="280" width="220" height="50" rx="8" fill="#fff" stroke="#e2e8f0" stroke-width="1" />
+      <text x="635" y="305" text-anchor="middle" font-size="12" fill="#1e293b">Cancel + Save Buttons</text>
+      <text x="635" y="320" text-anchor="middle" font-size="10" fill="#94a3b8">with loading states</text>
+
+      <!-- Arrows -->
+      <defs>
+        <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto" fill="#0891b2">
+          <polygon points="0 0, 10 3.5, 0 7" />
+        </marker>
+      </defs>
+      <line x1="525" y1="100" x2="358" y2="100" stroke="#0891b2" stroke-width="2" marker-end="url(#arrowhead)" />
+      <line x1="525" y1="205" x2="358" y2="205" stroke="#0891b2" stroke-width="2" marker-end="url(#arrowhead)" />
+      <line x1="525" y1="305" x2="358" y2="305" stroke="#0891b2" stroke-width="2" marker-end="url(#arrowhead)" />
+
+      <!-- Arrow labels -->
+      <text x="441" y="92" text-anchor="middle" font-size="10" fill="#0891b2" font-weight="600">header=</text>
+      <text x="441" y="197" text-anchor="middle" font-size="10" fill="#0891b2" font-weight="600">children</text>
+      <text x="441" y="297" text-anchor="middle" font-size="10" fill="#0891b2" font-weight="600">footer=</text>
+
+      <!-- Bottom label -->
+      <text x="400" y="415" text-anchor="middle" font-size="12" fill="#64748b" font-style="italic">The layout provides structure. The consumer fills in the content.</text>
+    </svg>
+  </div>
+
+  <!-- ====== THE SOLUTION ====== -->
+  <h2>The Solution</h2>
+
+  <div class="solution-box">
+    <h3>Named Props as Slots</h3>
+    <p>
+      Instead of many granular props, accept a few <strong>slot props</strong> that take JSX elements. This gives consumers full control over what goes in each area while your component retains control over <em>structure and layout</em>.
+    </p>
+  </div>
+
+  <!-- ====== APPROACH 1 ====== -->
+  <h3>Approach 1: Props-Based Slots (Most Common)</h3>
+  <p>
+    The simplest and most widely used approach. Each slot is a prop that accepts a <code>ReactNode</code>.
+  </p>
+
+  <pre><code><span class="comment">// A clean Card with slot props instead of prop explosion</span>
+<span class="keyword">function</span> <span class="component">Card</span>({ <span class="attr">header</span>, <span class="attr">children</span>, <span class="attr">footer</span> }) {
+  <span class="keyword">return</span> (
+    &lt;<span class="tag">div</span> <span class="attr">className</span>=<span class="string">"card"</span>&gt;
+      {header &amp;&amp; &lt;<span class="tag">div</span> <span class="attr">className</span>=<span class="string">"card-header"</span>&gt;{header}&lt;/<span class="tag">div</span>&gt;}
+      &lt;<span class="tag">div</span> <span class="attr">className</span>=<span class="string">"card-body"</span>&gt;{children}&lt;/<span class="tag">div</span>&gt;
+      {footer &amp;&amp; &lt;<span class="tag">div</span> <span class="attr">className</span>=<span class="string">"card-footer"</span>&gt;{footer}&lt;/<span class="tag">div</span>&gt;}
+    &lt;/<span class="tag">div</span>&gt;
+  );
+}
+
+<span class="comment">// Usage &mdash; consumers have FULL control over each slot's content</span>
+&lt;<span class="component">Card</span>
+  <span class="attr">header</span>={
+    &lt;&gt;
+      &lt;<span class="component">Avatar</span> <span class="attr">src</span>={user.pic} /&gt;
+      &lt;<span class="tag">h3</span>&gt;{user.name}&lt;/<span class="tag">h3</span>&gt;
+    &lt;/&gt;
+  }
+  <span class="attr">footer</span>={&lt;<span class="component">Button</span>&gt;Save&lt;/<span class="component">Button</span>&gt;}
+&gt;
+  &lt;<span class="tag">p</span>&gt;Card body content here&lt;/<span class="tag">p</span>&gt;
+&lt;/<span class="component">Card</span>&gt;</code></pre>
+
+  <!-- ====== APPROACH 2 ====== -->
+  <h3>Approach 2: Compound Slots (Using Sub-Components)</h3>
+  <p>
+    For richer APIs, attach slot components directly to the parent. This reads like declarative HTML and scales well for complex layouts.
+  </p>
+
+  <pre><code><span class="keyword">import</span> React, { Children, isValidElement } <span class="keyword">from</span> <span class="string">'react'</span>;
+
+<span class="comment">// Helper: find a specific slot child by type</span>
+<span class="keyword">function</span> <span class="function">findSlot</span>(children, slotType) {
+  <span class="keyword">return</span> Children.toArray(children).find(
+    (child) =&gt; isValidElement(child) &amp;&amp; child.type === slotType
+  );
+}
+
+<span class="comment">// Helper: get everything that ISN'T a named slot</span>
+<span class="keyword">function</span> <span class="function">filterSlots</span>(children, slotTypes) {
+  <span class="keyword">return</span> Children.toArray(children).filter(
+    (child) =&gt; !isValidElement(child) || !slotTypes.includes(child.type)
+  );
+}
+
+<span class="keyword">function</span> <span class="component">Page</span>({ <span class="attr">children</span> }) {
+  <span class="keyword">const</span> header  = <span class="function">findSlot</span>(children, <span class="component">Page</span>.Header);
+  <span class="keyword">const</span> sidebar = <span class="function">findSlot</span>(children, <span class="component">Page</span>.Sidebar);
+  <span class="keyword">const</span> footer  = <span class="function">findSlot</span>(children, <span class="component">Page</span>.Footer);
+  <span class="keyword">const</span> content = <span class="function">filterSlots</span>(children, [
+    <span class="component">Page</span>.Header, <span class="component">Page</span>.Sidebar, <span class="component">Page</span>.Footer
+  ]);
+
+  <span class="keyword">return</span> (
+    &lt;<span class="tag">div</span> <span class="attr">className</span>=<span class="string">"page-layout"</span>&gt;
+      &lt;<span class="tag">header</span>&gt;{header}&lt;/<span class="tag">header</span>&gt;
+      &lt;<span class="tag">aside</span>&gt;{sidebar}&lt;/<span class="tag">aside</span>&gt;
+      &lt;<span class="tag">main</span>&gt;{content}&lt;/<span class="tag">main</span>&gt;
+      &lt;<span class="tag">footer</span>&gt;{footer}&lt;/<span class="tag">footer</span>&gt;
+    &lt;/<span class="tag">div</span>&gt;
+  );
+}
+
+<span class="comment">// Define slot sub-components</span>
+<span class="component">Page</span>.Header  = ({ <span class="attr">children</span> }) =&gt; children;
+<span class="component">Page</span>.Sidebar = ({ <span class="attr">children</span> }) =&gt; children;
+<span class="component">Page</span>.Footer  = ({ <span class="attr">children</span> }) =&gt; children;
+
+<span class="comment">// Usage &mdash; reads like declarative HTML</span>
+&lt;<span class="component">Page</span>&gt;
+  &lt;<span class="component">Page.Header</span>&gt;
+    &lt;<span class="component">Logo</span> /&gt; &lt;<span class="component">Nav</span> /&gt;
+  &lt;/<span class="component">Page.Header</span>&gt;
+  &lt;<span class="component">Page.Sidebar</span>&gt;
+    &lt;<span class="component">MenuItems</span> /&gt;
+  &lt;/<span class="component">Page.Sidebar</span>&gt;
+  Main content here
+  &lt;<span class="component">Page.Footer</span>&gt;
+    &lt;<span class="component">Copyright</span> /&gt;
+  &lt;/<span class="component">Page.Footer</span>&gt;
+&lt;/<span class="component">Page</span>&gt;</code></pre>
+
+  <!-- ====== APPROACH 3 ====== -->
+  <h3>Approach 3: Function Slots (When Slots Need Parent Data)</h3>
+  <p>
+    When slots need to receive data from the parent component, use <strong>function slots</strong> &mdash; a fusion of the Slot and Render Props patterns.
+  </p>
+
+  <pre><code><span class="keyword">function</span> <span class="component">DataTable</span>({ <span class="attr">data</span>, <span class="attr">columns</span>, <span class="attr">headerSlot</span>, <span class="attr">rowSlot</span>, <span class="attr">emptySlot</span> }) {
+  <span class="keyword">if</span> (data.length === <span class="string">0</span>) {
+    <span class="keyword">return</span> emptySlot?.() || &lt;<span class="tag">p</span>&gt;No data&lt;/<span class="tag">p</span>&gt;;
+  }
+
+  <span class="keyword">return</span> (
+    &lt;<span class="tag">table</span>&gt;
+      &lt;<span class="tag">thead</span>&gt;
+        {headerSlot?.(columns) || (
+          &lt;<span class="tag">tr</span>&gt;
+            {columns.map(<span class="attr">col</span> =&gt; &lt;<span class="tag">th</span> <span class="attr">key</span>={col.key}&gt;{col.label}&lt;/<span class="tag">th</span>&gt;)}
+          &lt;/<span class="tag">tr</span>&gt;
+        )}
+      &lt;/<span class="tag">thead</span>&gt;
+      &lt;<span class="tag">tbody</span>&gt;
+        {data.map((<span class="attr">row</span>, <span class="attr">i</span>) =&gt;
+          rowSlot?.(row, i) || &lt;<span class="component">DefaultRow</span> <span class="attr">key</span>={i} <span class="attr">row</span>={row} /&gt;
+        )}
+      &lt;/<span class="tag">tbody</span>&gt;
+    &lt;/<span class="tag">table</span>&gt;
+  );
+}
+
+<span class="comment">// Usage &mdash; slots receive data from parent</span>
+&lt;<span class="component">DataTable</span>
+  <span class="attr">data</span>={users}
+  <span class="attr">columns</span>={[
+    { key: <span class="string">'name'</span>, label: <span class="string">'Name'</span> },
+    { key: <span class="string">'role'</span>, label: <span class="string">'Role'</span> },
+  ]}
+  <span class="attr">headerSlot</span>={(<span class="attr">cols</span>) =&gt; (
+    &lt;<span class="tag">tr</span>&gt;
+      {cols.map(<span class="attr">c</span> =&gt; &lt;<span class="tag">th</span> <span class="attr">key</span>={c.key} <span class="attr">style</span>={{ color: <span class="string">'blue'</span> }}&gt;{c.label}&lt;/<span class="tag">th</span>&gt;)}
+    &lt;/<span class="tag">tr</span>&gt;
+  )}
+  <span class="attr">rowSlot</span>={(<span class="attr">user</span>, <span class="attr">index</span>) =&gt; (
+    &lt;<span class="tag">tr</span> <span class="attr">key</span>={user.id} <span class="attr">className</span>={index % <span class="string">2</span> ? <span class="string">'striped'</span> : <span class="string">''</span>}&gt;
+      &lt;<span class="tag">td</span>&gt;&lt;<span class="component">UserAvatar</span> <span class="attr">user</span>={user} /&gt; {user.name}&lt;/<span class="tag">td</span>&gt;
+      &lt;<span class="tag">td</span>&gt;&lt;<span class="component">RoleBadge</span> <span class="attr">role</span>={user.role} /&gt;&lt;/<span class="tag">td</span>&gt;
+    &lt;/<span class="tag">tr</span>&gt;
+  )}
+  <span class="attr">emptySlot</span>={() =&gt; (
+    &lt;<span class="component">EmptyState</span> <span class="attr">icon</span>=<span class="string">"users"</span> <span class="attr">message</span>=<span class="string">"No users found"</span> /&gt;
+  )}
+/&gt;</code></pre>
+
+  <!-- ====== FULL EXAMPLE: APPSHELL ====== -->
+  <h2>Full Example: AppShell with Slots</h2>
+  <p>
+    A realistic layout component for an entire application page, using props-based slots.
+  </p>
+
+  <pre><code><span class="keyword">function</span> <span class="component">AppShell</span>({ <span class="attr">navbar</span>, <span class="attr">sidebar</span>, <span class="attr">children</span>, <span class="attr">footer</span> }) {
+  <span class="keyword">return</span> (
+    &lt;<span class="tag">div</span> <span class="attr">className</span>=<span class="string">"app-shell"</span>&gt;
+      {navbar &amp;&amp; (
+        &lt;<span class="tag">nav</span> <span class="attr">className</span>=<span class="string">"app-navbar"</span>&gt;{navbar}&lt;/<span class="tag">nav</span>&gt;
+      )}
+      &lt;<span class="tag">div</span> <span class="attr">className</span>=<span class="string">"app-body"</span>&gt;
+        {sidebar &amp;&amp; (
+          &lt;<span class="tag">aside</span> <span class="attr">className</span>=<span class="string">"app-sidebar"</span>&gt;{sidebar}&lt;/<span class="tag">aside</span>&gt;
+        )}
+        &lt;<span class="tag">main</span> <span class="attr">className</span>=<span class="string">"app-content"</span>&gt;{children}&lt;/<span class="tag">main</span>&gt;
+      &lt;/<span class="tag">div</span>&gt;
+      {footer &amp;&amp; (
+        &lt;<span class="tag">footer</span> <span class="attr">className</span>=<span class="string">"app-footer"</span>&gt;{footer}&lt;/<span class="tag">footer</span>&gt;
+      )}
+    &lt;/<span class="tag">div</span>&gt;
+  );
+}
+
+<span class="comment">// Usage in your app</span>
+&lt;<span class="component">AppShell</span>
+  <span class="attr">navbar</span>={
+    &lt;<span class="tag">div</span> <span class="attr">className</span>=<span class="string">"flex items-center gap-4"</span>&gt;
+      &lt;<span class="component">Logo</span> /&gt;
+      &lt;<span class="component">SearchBar</span> /&gt;
+      &lt;<span class="component">UserMenu</span> <span class="attr">user</span>={currentUser} /&gt;
+    &lt;/<span class="tag">div</span>&gt;
+  }
+  <span class="attr">sidebar</span>={
+    &lt;<span class="component">Navigation</span> <span class="attr">items</span>={menuItems} <span class="attr">active</span>={currentPath} /&gt;
+  }
+  <span class="attr">footer</span>={
+    &lt;<span class="tag">p</span>&gt;&amp;copy; 2026 My App. All rights reserved.&lt;/<span class="tag">p</span>&gt;
+  }
+&gt;
+  <span class="comment">{/* This is the main content area */}</span>
+  &lt;<span class="component">PageHeader</span> <span class="attr">title</span>=<span class="string">"Dashboard"</span> /&gt;
+  &lt;<span class="component">StatsGrid</span> <span class="attr">data</span>={stats} /&gt;
+  &lt;<span class="component">RecentActivity</span> <span class="attr">items</span>={activities} /&gt;
+&lt;/<span class="component">AppShell</span>&gt;</code></pre>
+
+  <!-- ====== TYPESCRIPT ====== -->
+  <h2>TypeScript Typing for Slots</h2>
+
+  <pre><code><span class="keyword">import</span> { ReactNode } <span class="keyword">from</span> <span class="string">'react'</span>;
+
+<span class="keyword">interface</span> <span class="component">CardProps</span> {
+  <span class="attr">header</span>?: ReactNode;      <span class="comment">// Optional slot</span>
+  <span class="attr">children</span>: ReactNode;     <span class="comment">// Required slot</span>
+  <span class="attr">footer</span>?: ReactNode;      <span class="comment">// Optional slot</span>
+}
+
+<span class="keyword">interface</span> <span class="component">DataTableProps</span>&lt;T&gt; {
+  <span class="attr">data</span>: T[];
+  <span class="attr">columns</span>: Column[];
+  <span class="attr">headerSlot</span>?: (columns: Column[]) =&gt; ReactNode;  <span class="comment">// Function slot</span>
+  <span class="attr">rowSlot</span>?: (item: T, index: number) =&gt; ReactNode; <span class="comment">// Function slot</span>
+  <span class="attr">emptySlot</span>?: () =&gt; ReactNode;                     <span class="comment">// Function slot</span>
+}</code></pre>
+
+  <!-- ====== COMPARISON TABLE ====== -->
+  <h2>Comparing Slot Approaches</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Approach</th>
+        <th>Pros</th>
+        <th>Cons</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Props-based slots</strong></td>
+        <td>Simple, explicit, easy to type with TypeScript</td>
+        <td>Slots can't communicate with each other easily</td>
+      </tr>
+      <tr>
+        <td><strong>Compound slots</strong></td>
+        <td>Clean JSX, feels like HTML, scales well</td>
+        <td>More complex implementation, requires helper functions</td>
+      </tr>
+      <tr>
+        <td><strong>Function slots</strong></td>
+        <td>Slots receive data from the parent component</td>
+        <td>Less readable for simple cases, blurs into render props</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- ====== REAL WORLD ====== -->
+  <h2>Real-World Examples</h2>
+  <p>The Slot Pattern is everywhere in production React libraries:</p>
+  <ul>
+    <li><strong>Next.js Layout pattern</strong> &mdash; <code>layout.tsx</code> receives <code>children</code> as a slot for nested routes. Parallel routes like <code>@modal</code> are additional named slots.</li>
+    <li><strong>Ant Design's Card</strong> &mdash; accepts <code>title</code>, <code>extra</code>, <code>cover</code>, and <code>actions</code> as slot props alongside <code>children</code>.</li>
+    <li><strong>Material UI</strong> &mdash; <code>AppBar</code>, <code>Card</code>, and <code>Dialog</code> all use sub-components as compound slots (e.g., <code>CardHeader</code>, <code>CardContent</code>, <code>CardActions</code>).</li>
+    <li><strong>Radix UI's Dialog</strong> &mdash; uses compound slots: <code>Dialog.Trigger</code>, <code>Dialog.Content</code>, <code>Dialog.Title</code>, <code>Dialog.Description</code>, <code>Dialog.Close</code>.</li>
+  </ul>
+
+  <!-- ====== WHEN TO USE ====== -->
+  <h2>When to Use</h2>
+
+  <div class="card-row">
+    <div class="card do-card">
+      <h4>Use When</h4>
+      <ul>
+        <li>Building reusable <strong>layout components</strong> (Card, Dialog, Page, AppShell, Modal)</li>
+        <li>Creating <strong>design system components</strong> where structure is fixed but content varies</li>
+        <li>A component has <strong>3+ customizable areas</strong> and string props aren't expressive enough</li>
+        <li>You want consumers to inject <strong>arbitrary JSX</strong> &mdash; not just strings or simple values</li>
+      </ul>
+    </div>
+    <div class="card dont-card">
+      <h4>Don't Use When</h4>
+      <ul>
+        <li>A component has only <strong>1&ndash;2 customization points</strong> &mdash; just use <code>children</code> and maybe one prop</li>
+        <li>The <strong>structure itself</strong> needs to change &mdash; slots assume a fixed layout</li>
+        <li>Simple text customization is enough &mdash; a <code>title: string</code> prop is simpler than a slot for a heading</li>
+        <li>You need <strong>bidirectional communication</strong> between slots &mdash; consider Context or State Reducer instead</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ====== KEY TAKEAWAY ====== -->
+  <div class="key-takeaway">
+    <h3>Key Takeaway</h3>
+    <p>
+      The Slot Pattern turns your components into <strong>flexible templates</strong>. Instead of predicting every customization need with individual props, provide named slots and let consumers fill them with whatever they need. Think of it as creating a <strong>picture frame</strong> &mdash; you provide the frame, they provide the picture.
+    </p>
+  </div>
+
+  <!-- ====== BOTTOM NAV ====== -->
+  <div class="nav">
+    <a href="10-lazy-loading.html">&larr; Previous: Lazy Loading</a>
+    <a href="index.html">Back to Index &rarr;</a>
+  </div>
+
+</body>
+</html>

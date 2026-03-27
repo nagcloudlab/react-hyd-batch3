@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lazy Loading | React Patterns</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --accent: #7c3aed;
+  --accent-light: #f5f3ff;
+  --problem-bg: #fff7ed;
+  --problem-border: #fb923c;
+  --solution-bg: #f0fdf4;
+  --solution-border: #4ade80;
+  --code-bg: #1e1e2e;
+  --code-text: #cdd6f4;
+  --text: #1e293b;
+  --text-light: #64748b;
+  --surface: #ffffff;
+  --border: #e2e8f0;
+  --font: 'Inter', -apple-system, sans-serif;
+  --mono: 'Fira Code', 'Consolas', monospace;
+}
+body { font-family: var(--font); color: var(--text); line-height: 1.7; max-width: 960px; margin: 0 auto; padding: 2rem; background: #fafbfc; }
+h1 { font-size: 2.5rem; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 0.5rem; }
+h2 { font-size: 1.5rem; font-weight: 700; margin: 2.5rem 0 1rem; color: var(--accent); }
+h3 { font-size: 1.15rem; font-weight: 600; margin: 1.5rem 0 0.75rem; }
+p, li { font-size: 1.05rem; margin-bottom: 0.75rem; }
+ul { padding-left: 1.5rem; }
+.badge { display: inline-block; background: var(--accent); color: #fff; font-size: 0.8rem; font-weight: 600; padding: 0.25rem 0.75rem; border-radius: 999px; margin-bottom: 1rem; letter-spacing: 0.05em; text-transform: uppercase; }
+.subtitle { font-size: 1.25rem; color: var(--text-light); font-weight: 400; margin-bottom: 2rem; }
+.problem-box, .solution-box { padding: 1.5rem 2rem; border-radius: 12px; margin: 1.5rem 0; border-left: 4px solid; }
+.problem-box { background: var(--problem-bg); border-color: var(--problem-border); }
+.problem-box h3::before { content: '\26A0 '; }
+.solution-box { background: var(--solution-bg); border-color: var(--solution-border); }
+.solution-box h3::before { content: '\2726 '; }
+pre { background: var(--code-bg); color: var(--code-text); padding: 1.5rem; border-radius: 10px; overflow-x: auto; margin: 1rem 0; font-size: 0.92rem; line-height: 1.6; }
+code { font-family: var(--mono); font-size: 0.9em; }
+:not(pre) > code { background: #f1f5f9; padding: 0.15em 0.4em; border-radius: 4px; color: var(--accent); }
+.diagram { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 2rem; margin: 2rem 0; text-align: center; }
+.diagram svg { max-width: 100%; height: auto; }
+.card-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin: 1.5rem 0; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1.25rem 1.5rem; }
+.card h4 { font-weight: 600; margin-bottom: 0.5rem; }
+.do-card { border-left: 4px solid #22c55e; }
+.dont-card { border-left: 4px solid #ef4444; }
+.nav { display: flex; justify-content: space-between; padding: 1rem 0; border-top: 1px solid var(--border); margin-top: 3rem; font-size: 0.95rem; }
+.nav a { color: var(--accent); text-decoration: none; font-weight: 500; }
+.nav a:hover { text-decoration: underline; }
+.top-nav { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border); }
+.top-nav a { color: var(--text-light); text-decoration: none; font-size: 0.85rem; padding: 0.3rem 0.7rem; border-radius: 6px; background: #f1f5f9; transition: all 0.2s; }
+.top-nav a:hover, .top-nav a.active { background: var(--accent); color: #fff; }
+.key-takeaway { background: var(--accent-light); border-radius: 12px; padding: 1.5rem 2rem; margin: 2rem 0; }
+.key-takeaway h3 { color: var(--accent); margin-top: 0; }
+.comment { color: #6a9955; }
+.keyword { color: #c586c0; }
+.function { color: #dcdcaa; }
+.string { color: #ce9178; }
+.component { color: #4ec9b0; }
+.tag { color: #569cd6; }
+.attr { color: #9cdcfe; }
+.comparison-table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.95rem; }
+.comparison-table th { background: var(--accent); color: #fff; padding: 0.75rem 1rem; text-align: left; font-weight: 600; }
+.comparison-table th:first-child { border-radius: 8px 0 0 0; }
+.comparison-table th:last-child { border-radius: 0 8px 0 0; }
+.comparison-table td { padding: 0.75rem 1rem; border-bottom: 1px solid var(--border); }
+.comparison-table tr:last-child td:first-child { border-radius: 0 0 0 8px; }
+.comparison-table tr:last-child td:last-child { border-radius: 0 0 8px 0; }
+.comparison-table tr:nth-child(even) { background: #f8fafc; }
+.metrics-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin: 1.5rem 0; }
+.metric-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1.25rem; text-align: center; }
+.metric-card .metric-label { font-size: 0.85rem; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
+.metric-card .metric-value { font-size: 1.6rem; font-weight: 800; color: var(--accent); margin: 0.25rem 0; }
+.metric-card .metric-desc { font-size: 0.85rem; color: var(--text-light); }
+@media (max-width: 700px) {
+  .card-row { grid-template-columns: 1fr; }
+  .metrics-row { grid-template-columns: 1fr; }
+}
+@media print { body { max-width: 100%; } .top-nav, .nav { display: none; } }
+</style>
+</head>
+<body>
+
+<nav class="top-nav">
+  <a href="index.html">Index</a>
+  <a href="01-compound-components.html">Compound</a>
+  <a href="02-render-props.html">Render Props</a>
+  <a href="03-higher-order-components.html">HOCs</a>
+  <a href="04-custom-hooks.html">Custom Hooks</a>
+  <a href="05-container-presentational.html">Container</a>
+  <a href="06-state-reducer.html">State Reducer</a>
+  <a href="07-memoization.html">Memoization</a>
+  <a href="08-code-splitting.html">Code Splitting</a>
+  <a href="09-context-module.html">Context Module</a>
+  <a href="10-lazy-loading.html" class="active">Lazy Loading</a>
+  <a href="11-slot-pattern.html">Slot Pattern</a>
+</nav>
+
+<span class="badge">Performance Pattern</span>
+<h1>Lazy Loading</h1>
+<p class="subtitle">Defer loading of off-screen content until the user actually needs it</p>
+
+<p>
+  Lazy loading is a performance strategy that delays the loading or rendering of content until it enters
+  (or is about to enter) the user's viewport. Unlike <strong>code splitting</strong> (Pattern 08), which
+  focuses on breaking JavaScript bundles into smaller chunks, lazy loading is about <em>deferring visible content</em>
+  &mdash; images, components below the fold, infinite scroll lists, and heavy widgets &mdash; using the
+  <code>Intersection Observer API</code>.
+</p>
+
+<h2>The Problem</h2>
+
+<div class="problem-box">
+  <h3>Eagerly Loading Everything Wastes Resources</h3>
+  <p>
+    A page with 50 product cards, each featuring a high-resolution image, loads <strong>all 50 images
+    immediately</strong> even though the user only sees 4&ndash;6 on screen. A dashboard loads heavy chart
+    widgets below the fold that the user hasn't scrolled to yet. This wastes bandwidth, consumes memory,
+    and dramatically slows the initial paint.
+  </p>
+</div>
+
+<h3>Before: Eager Loading (the wasteful way)</h3>
+<pre><code><span class="comment">// ProductGrid.jsx &mdash; loads ALL 50 images immediately on mount</span>
+<span class="keyword">function</span> <span class="function">ProductGrid</span>({ <span class="attr">products</span> }) {
+  <span class="keyword">return</span> (
+    &lt;<span class="tag">div</span> <span class="attr">className</span>=<span class="string">"grid"</span>&gt;
+      {products.<span class="function">map</span>(product =&gt; (
+        &lt;<span class="tag">div</span> <span class="attr">key</span>={product.id} <span class="attr">className</span>=<span class="string">"product-card"</span>&gt;
+          {<span class="comment">/* Every image starts downloading immediately,</span>
+<span class="comment">             even if it's off-screen! */</span>}
+          &lt;<span class="tag">img</span>
+            <span class="attr">src</span>={product.imageUrl}
+            <span class="attr">alt</span>={product.name}
+            <span class="attr">width</span>={<span class="string">400</span>}
+            <span class="attr">height</span>={<span class="string">300</span>}
+          /&gt;
+          &lt;<span class="tag">h3</span>&gt;{product.name}&lt;/<span class="tag">h3</span>&gt;
+          &lt;<span class="tag">p</span>&gt;${product.price}&lt;/<span class="tag">p</span>&gt;
+        &lt;/<span class="tag">div</span>&gt;
+      ))}
+    &lt;/<span class="tag">div</span>&gt;
+  );
+}
+
+<span class="comment">// Result: 50 images x ~200KB each = ~10MB downloaded on page load</span>
+<span class="comment">// User only sees 4-6 cards &mdash; the rest is wasted bandwidth</span></code></pre>
+
+<h2>How It Works</h2>
+
+<div class="diagram">
+  <svg viewBox="0 0 720 480" xmlns="http://www.w3.org/2000/svg" font-family="Inter, sans-serif">
+    <!-- Browser frame -->
+    <rect x="160" y="10" width="400" height="460" rx="12" fill="#fff" stroke="#cbd5e1" stroke-width="2"/>
+    <!-- Title bar -->
+    <rect x="160" y="10" width="400" height="32" rx="12" fill="#f1f5f9"/>
+    <rect x="160" y="30" width="400" height="12" fill="#f1f5f9"/>
+    <circle cx="180" cy="26" r="5" fill="#ef4444"/>
+    <circle cx="196" cy="26" r="5" fill="#fbbf24"/>
+    <circle cx="212" cy="26" r="5" fill="#22c55e"/>
+    <rect x="240" y="20" width="200" height="12" rx="4" fill="#e2e8f0"/>
+
+    <!-- Scrollbar -->
+    <rect x="544" y="50" width="8" height="410" rx="4" fill="#f1f5f9"/>
+    <rect x="544" y="55" width="8" height="80" rx="4" fill="#cbd5e1"/>
+
+    <!-- Viewport boundary line -->
+    <line x1="155" y1="270" x2="565" y2="270" stroke="#7c3aed" stroke-width="2" stroke-dasharray="8 4"/>
+    <rect x="56" y="256" width="95" height="28" rx="6" fill="#7c3aed"/>
+    <text x="103" y="275" text-anchor="middle" fill="#fff" font-size="11" font-weight="600">VIEWPORT EDGE</text>
+
+    <!-- Above the fold label -->
+    <rect x="10" y="85" width="130" height="24" rx="6" fill="#f0fdf4" stroke="#4ade80" stroke-width="1"/>
+    <text x="75" y="101" text-anchor="middle" fill="#16a34a" font-size="10" font-weight="600">VISIBLE &mdash; LOADED</text>
+
+    <!-- Loaded images (above fold) -->
+    <rect x="180" y="58" width="165" height="90" rx="8" fill="#ddd6fe" stroke="#7c3aed" stroke-width="1.5"/>
+    <text x="262" y="98" text-anchor="middle" fill="#7c3aed" font-size="20">&#128247;</text>
+    <text x="262" y="118" text-anchor="middle" fill="#7c3aed" font-size="10" font-weight="600">Image loaded</text>
+
+    <rect x="375" y="58" width="165" height="90" rx="8" fill="#ddd6fe" stroke="#7c3aed" stroke-width="1.5"/>
+    <text x="457" y="98" text-anchor="middle" fill="#7c3aed" font-size="20">&#128247;</text>
+    <text x="457" y="118" text-anchor="middle" fill="#7c3aed" font-size="10" font-weight="600">Image loaded</text>
+
+    <rect x="180" y="160" width="165" height="90" rx="8" fill="#ddd6fe" stroke="#7c3aed" stroke-width="1.5"/>
+    <text x="262" y="200" text-anchor="middle" fill="#7c3aed" font-size="20">&#128247;</text>
+    <text x="262" y="220" text-anchor="middle" fill="#7c3aed" font-size="10" font-weight="600">Image loaded</text>
+
+    <rect x="375" y="160" width="165" height="90" rx="8" fill="#ddd6fe" stroke="#7c3aed" stroke-width="1.5"/>
+    <text x="457" y="200" text-anchor="middle" fill="#7c3aed" font-size="20">&#128247;</text>
+    <text x="457" y="220" text-anchor="middle" fill="#7c3aed" font-size="10" font-weight="600">Image loaded</text>
+
+    <!-- Intersection Observer label -->
+    <rect x="580" y="245" width="135" height="50" rx="8" fill="#7c3aed" opacity="0.1" stroke="#7c3aed" stroke-width="1.5"/>
+    <text x="647" y="266" text-anchor="middle" fill="#7c3aed" font-size="10" font-weight="700">INTERSECTION</text>
+    <text x="647" y="282" text-anchor="middle" fill="#7c3aed" font-size="10" font-weight="700">OBSERVER</text>
+    <!-- Arrow from observer to viewport line -->
+    <line x1="580" y1="270" x2="568" y2="270" stroke="#7c3aed" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+    <defs>
+      <marker id="arrowhead" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+        <polygon points="0 0, 8 3, 0 6" fill="#7c3aed"/>
+      </marker>
+    </defs>
+
+    <!-- Below the fold label -->
+    <rect x="10" y="340" width="130" height="24" rx="6" fill="#fff7ed" stroke="#fb923c" stroke-width="1"/>
+    <text x="75" y="356" text-anchor="middle" fill="#ea580c" font-size="10" font-weight="600">NOT VISIBLE &mdash; DEFERRED</text>
+
+    <!-- Deferred images (below fold) -->
+    <rect x="180" y="290" width="165" height="90" rx="8" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="6 4"/>
+    <text x="262" y="335" text-anchor="middle" fill="#94a3b8" font-size="11" font-weight="500">Placeholder</text>
+
+    <rect x="375" y="290" width="165" height="90" rx="8" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="6 4"/>
+    <text x="457" y="335" text-anchor="middle" fill="#94a3b8" font-size="11" font-weight="500">Placeholder</text>
+
+    <rect x="180" y="392" width="165" height="68" rx="8" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="6 4"/>
+    <text x="262" y="430" text-anchor="middle" fill="#94a3b8" font-size="11" font-weight="500">Placeholder</text>
+
+    <rect x="375" y="392" width="165" height="68" rx="8" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="6 4"/>
+    <text x="457" y="430" text-anchor="middle" fill="#94a3b8" font-size="11" font-weight="500">Placeholder</text>
+
+    <!-- Scroll arrow -->
+    <text x="360" y="475" text-anchor="middle" fill="#94a3b8" font-size="10" font-weight="500">&#8595; scroll to load more</text>
+  </svg>
+</div>
+
+<h2>Solution 1: Lazy Loading Images</h2>
+
+<div class="solution-box">
+  <h3>LazyImage Component with IntersectionObserver</h3>
+  <p>
+    Create a reusable component that only loads an image when it scrolls into (or near) the viewport.
+    A placeholder is shown until the image is needed, saving bandwidth and speeding up initial render.
+  </p>
+</div>
+
+<h3>The Native Approach (simplest)</h3>
+<pre><code><span class="comment">// The easiest win &mdash; just add loading="lazy" to your img tags</span>
+<span class="keyword">function</span> <span class="function">ProductCard</span>({ <span class="attr">product</span> }) {
+  <span class="keyword">return</span> (
+    &lt;<span class="tag">div</span> <span class="attr">className</span>=<span class="string">"product-card"</span>&gt;
+      &lt;<span class="tag">img</span>
+        <span class="attr">src</span>={product.imageUrl}
+        <span class="attr">alt</span>={product.name}
+        <span class="attr">loading</span>=<span class="string">"lazy"</span>       <span class="comment">// Browser handles lazy loading!</span>
+        <span class="attr">width</span>={<span class="string">400</span>}            <span class="comment">// Always set dimensions to prevent layout shift</span>
+        <span class="attr">height</span>={<span class="string">300</span>}
+      /&gt;
+      &lt;<span class="tag">h3</span>&gt;{product.name}&lt;/<span class="tag">h3</span>&gt;
+      &lt;<span class="tag">p</span>&gt;${product.price}&lt;/<span class="tag">p</span>&gt;
+    &lt;/<span class="tag">div</span>&gt;
+  );
+}</code></pre>
+
+<h3>Custom LazyImage with IntersectionObserver</h3>
+<pre><code><span class="keyword">import</span> { useState, useRef, useEffect } <span class="keyword">from</span> <span class="string">'react'</span>;
+
+<span class="keyword">function</span> <span class="function">LazyImage</span>({ <span class="attr">src</span>, <span class="attr">alt</span>, <span class="attr">width</span>, <span class="attr">height</span>, <span class="attr">placeholder</span>, ...<span class="attr">props</span> }) {
+  <span class="keyword">const</span> [isLoaded, setIsLoaded] = <span class="function">useState</span>(<span class="keyword">false</span>);
+  <span class="keyword">const</span> [isInView, setIsInView] = <span class="function">useState</span>(<span class="keyword">false</span>);
+  <span class="keyword">const</span> imgRef = <span class="function">useRef</span>(<span class="keyword">null</span>);
+
+  <span class="function">useEffect</span>(() =&gt; {
+    <span class="keyword">const</span> element = imgRef.current;
+    <span class="keyword">if</span> (!element) <span class="keyword">return</span>;
+
+    <span class="keyword">const</span> observer = <span class="keyword">new</span> <span class="function">IntersectionObserver</span>(
+      ([entry]) =&gt; {
+        <span class="keyword">if</span> (entry.isIntersecting) {
+          setIsInView(<span class="keyword">true</span>);
+          observer.<span class="function">unobserve</span>(element); <span class="comment">// Stop observing once visible</span>
+        }
+      },
+      {
+        rootMargin: <span class="string">'200px'</span>, <span class="comment">// Start loading 200px before it enters viewport</span>
+        threshold: 0,
+      }
+    );
+
+    observer.<span class="function">observe</span>(element);
+
+    <span class="keyword">return</span> () =&gt; observer.<span class="function">disconnect</span>();
+  }, []);
+
+  <span class="keyword">return</span> (
+    &lt;<span class="tag">div</span>
+      <span class="attr">ref</span>={imgRef}
+      <span class="attr">style</span>={{ width, height, background: <span class="string">'#f1f5f9'</span>, borderRadius: <span class="string">'8px'</span> }}
+    &gt;
+      {isInView ? (
+        &lt;<span class="tag">img</span>
+          <span class="attr">src</span>={src}
+          <span class="attr">alt</span>={alt}
+          <span class="attr">width</span>={width}
+          <span class="attr">height</span>={height}
+          <span class="attr">onLoad</span>={() =&gt; <span class="function">setIsLoaded</span>(<span class="keyword">true</span>)}
+          <span class="attr">style</span>={{
+            opacity: isLoaded ? 1 : 0,
+            transition: <span class="string">'opacity 0.3s ease'</span>,
+          }}
+          {...props}
+        /&gt;
+      ) : (
+        placeholder || &lt;<span class="tag">div</span> <span class="attr">className</span>=<span class="string">"image-placeholder"</span> /&gt;
+      )}
+    &lt;/<span class="tag">div</span>&gt;
+  );
+}
+
+<span class="comment">// Usage:</span>
+<span class="keyword">function</span> <span class="function">ProductGrid</span>({ <span class="attr">products</span> }) {
+  <span class="keyword">return</span> (
+    &lt;<span class="tag">div</span> <span class="attr">className</span>=<span class="string">"grid"</span>&gt;
+      {products.<span class="function">map</span>(product =&gt; (
+        &lt;<span class="tag">div</span> <span class="attr">key</span>={product.id} <span class="attr">className</span>=<span class="string">"product-card"</span>&gt;
+          &lt;<span class="component">LazyImage</span>
+            <span class="attr">src</span>={product.imageUrl}
+            <span class="attr">alt</span>={product.name}
+            <span class="attr">width</span>={<span class="string">400</span>}
+            <span class="attr">height</span>={<span class="string">300</span>}
+          /&gt;
+          &lt;<span class="tag">h3</span>&gt;{product.name}&lt;/<span class="tag">h3</span>&gt;
+          &lt;<span class="tag">p</span>&gt;${product.price}&lt;/<span class="tag">p</span>&gt;
+        &lt;/<span class="tag">div</span>&gt;
+      ))}
+    &lt;/<span class="tag">div</span>&gt;
+  );
+}</code></pre>
+
+<h2>Solution 2: Lazy Loading Components on Scroll</h2>
+
+<div class="solution-box">
+  <h3>useLazyLoad Hook &mdash; Render Components Only When Visible</h3>
+  <p>
+    For heavy components like charts, maps, or comment sections that sit below the fold, delay their
+    rendering entirely until the user scrolls to them. This is different from code splitting &mdash;
+    the JS is already loaded, but we skip the render work.
+  </p>
+</div>
+
+<h3>Reusable useLazyLoad Hook</h3>
+<pre><code><span class="keyword">import</span> { useState, useRef, useEffect } <span class="keyword">from</span> <span class="string">'react'</span>;
+
+<span class="keyword">function</span> <span class="function">useLazyLoad</span>(options = {}) {
+  <span class="keyword">const</span> {
+    rootMargin = <span class="string">'100px'</span>,  <span class="comment">// Start rendering 100px before viewport</span>
+    threshold = 0,
+    triggerOnce = <span class="keyword">true</span>,    <span class="comment">// Once visible, stay rendered</span>
+  } = options;
+
+  <span class="keyword">const</span> [isVisible, setIsVisible] = <span class="function">useState</span>(<span class="keyword">false</span>);
+  <span class="keyword">const</span> ref = <span class="function">useRef</span>(<span class="keyword">null</span>);
+
+  <span class="function">useEffect</span>(() =&gt; {
+    <span class="keyword">const</span> element = ref.current;
+    <span class="keyword">if</span> (!element) <span class="keyword">return</span>;
+
+    <span class="keyword">const</span> observer = <span class="keyword">new</span> <span class="function">IntersectionObserver</span>(
+      ([entry]) =&gt; {
+        <span class="keyword">if</span> (entry.isIntersecting) {
+          setIsVisible(<span class="keyword">true</span>);
+          <span class="keyword">if</span> (triggerOnce) {
+            observer.<span class="function">unobserve</span>(element);
+          }
+        } <span class="keyword">else if</span> (!triggerOnce) {
+          setIsVisible(<span class="keyword">false</span>);
+        }
+      },
+      { rootMargin, threshold }
+    );
+
+    observer.<span class="function">observe</span>(element);
+
+    <span class="keyword">return</span> () =&gt; observer.<span class="function">disconnect</span>();
+  }, [rootMargin, threshold, triggerOnce]);
+
+  <span class="keyword">return</span> { ref, isVisible };
+}
+
+<span class="keyword">export default</span> useLazyLoad;</code></pre>
+
+<h3>LazySection Wrapper Component</h3>
+<pre><code><span class="keyword">function</span> <span class="function">LazySection</span>({ <span class="attr">children</span>, <span class="attr">height</span> = <span class="string">'400px'</span>, <span class="attr">placeholder</span>, ...<span class="attr">options</span> }) {
+  <span class="keyword">const</span> { ref, isVisible } = <span class="function">useLazyLoad</span>(options);
+
+  <span class="keyword">return</span> (
+    &lt;<span class="tag">div</span> <span class="attr">ref</span>={ref} <span class="attr">style</span>={{ minHeight: isVisible ? <span class="string">'auto'</span> : height }}&gt;
+      {isVisible ? (
+        children
+      ) : (
+        placeholder || (
+          &lt;<span class="tag">div</span> <span class="attr">style</span>={{
+            height,
+            background: <span class="string">'#f1f5f9'</span>,
+            borderRadius: <span class="string">'12px'</span>,
+            display: <span class="string">'flex'</span>,
+            alignItems: <span class="string">'center'</span>,
+            justifyContent: <span class="string">'center'</span>,
+            color: <span class="string">'#94a3b8'</span>,
+          }}&gt;
+            Loading when visible...
+          &lt;/<span class="tag">div</span>&gt;
+        )
+      )}
+    &lt;/<span class="tag">div</span>&gt;
+  );
+}
+
+<span class="comment">// Usage: Dashboard with heavy widgets below the fold</span>
+<span class="keyword">function</span> <span class="function">Dashboard</span>() {
+  <span class="keyword">return</span> (
+    &lt;<span class="tag">div</span>&gt;
+      {<span class="comment">/* Above the fold &mdash; renders immediately */</span>}
+      &lt;<span class="component">MetricsSummary</span> /&gt;
+      &lt;<span class="component">RecentActivity</span> /&gt;
+
+      {<span class="comment">/* Below the fold &mdash; deferred until scrolled into view */</span>}
+      &lt;<span class="component">LazySection</span> <span class="attr">height</span>=<span class="string">"500px"</span>&gt;
+        &lt;<span class="component">HeavyChartWidget</span> <span class="attr">data</span>={salesData} /&gt;
+      &lt;/<span class="component">LazySection</span>&gt;
+
+      &lt;<span class="component">LazySection</span> <span class="attr">height</span>=<span class="string">"300px"</span>&gt;
+        &lt;<span class="component">CommentsSection</span> <span class="attr">postId</span>={postId} /&gt;
+      &lt;/<span class="component">LazySection</span>&gt;
+
+      &lt;<span class="component">LazySection</span> <span class="attr">height</span>=<span class="string">"200px"</span>&gt;
+        &lt;<span class="component">Footer</span> /&gt;
+      &lt;/<span class="component">LazySection</span>&gt;
+    &lt;/<span class="tag">div</span>&gt;
+  );
+}</code></pre>
+
+<h2>Solution 3: Infinite Scroll / Load More</h2>
+
+<div class="solution-box">
+  <h3>useInfiniteScroll &mdash; Load Data as the User Scrolls</h3>
+  <p>
+    Place an invisible sentinel element at the bottom of a list. When it enters the viewport,
+    fetch the next batch of data. No "Load More" button needed &mdash; the experience is seamless.
+  </p>
+</div>
+
+<pre><code><span class="keyword">import</span> { useState, useRef, useEffect, useCallback } <span class="keyword">from</span> <span class="string">'react'</span>;
+
+<span class="keyword">function</span> <span class="function">useInfiniteScroll</span>(<span class="attr">fetchMore</span>, options = {}) {
+  <span class="keyword">const</span> {
+    rootMargin = <span class="string">'300px'</span>,  <span class="comment">// Trigger 300px before reaching the end</span>
+    threshold = 0,
+  } = options;
+
+  <span class="keyword">const</span> [isLoading, setIsLoading] = <span class="function">useState</span>(<span class="keyword">false</span>);
+  <span class="keyword">const</span> [hasMore, setHasMore] = <span class="function">useState</span>(<span class="keyword">true</span>);
+  <span class="keyword">const</span> sentinelRef = <span class="function">useRef</span>(<span class="keyword">null</span>);
+
+  <span class="keyword">const</span> <span class="function">handleIntersection</span> = <span class="function">useCallback</span>(
+    <span class="keyword">async</span> ([entry]) =&gt; {
+      <span class="keyword">if</span> (entry.isIntersecting && !isLoading && hasMore) {
+        setIsLoading(<span class="keyword">true</span>);
+        <span class="keyword">try</span> {
+          <span class="keyword">const</span> moreAvailable = <span class="keyword">await</span> <span class="function">fetchMore</span>();
+          setHasMore(moreAvailable);
+        } <span class="keyword">finally</span> {
+          setIsLoading(<span class="keyword">false</span>);
+        }
+      }
+    },
+    [fetchMore, isLoading, hasMore]
+  );
+
+  <span class="function">useEffect</span>(() =&gt; {
+    <span class="keyword">const</span> element = sentinelRef.current;
+    <span class="keyword">if</span> (!element) <span class="keyword">return</span>;
+
+    <span class="keyword">const</span> observer = <span class="keyword">new</span> <span class="function">IntersectionObserver</span>(handleIntersection, {
+      rootMargin,
+      threshold,
+    });
+
+    observer.<span class="function">observe</span>(element);
+    <span class="keyword">return</span> () =&gt; observer.<span class="function">disconnect</span>();
+  }, [handleIntersection, rootMargin, threshold]);
+
+  <span class="keyword">return</span> { sentinelRef, isLoading, hasMore };
+}
+
+<span class="keyword">export default</span> useInfiniteScroll;</code></pre>
+
+<h3>Product List with Infinite Scroll</h3>
+<pre><code><span class="keyword">function</span> <span class="function">ProductList</span>() {
+  <span class="keyword">const</span> [products, setProducts] = <span class="function">useState</span>([]);
+  <span class="keyword">const</span> [page, setPage] = <span class="function">useState</span>(1);
+  <span class="keyword">const</span> PAGE_SIZE = 10;
+
+  <span class="keyword">const</span> <span class="function">fetchMore</span> = <span class="function">useCallback</span>(<span class="keyword">async</span> () =&gt; {
+    <span class="keyword">const</span> res = <span class="keyword">await</span> <span class="function">fetch</span>(<span class="string">`/api/products?page=${page}&limit=${PAGE_SIZE}`</span>);
+    <span class="keyword">const</span> newProducts = <span class="keyword">await</span> res.<span class="function">json</span>();
+
+    setProducts(prev =&gt; [...prev, ...newProducts]);
+    setPage(prev =&gt; prev + 1);
+
+    <span class="comment">// Return false when no more data</span>
+    <span class="keyword">return</span> newProducts.length === PAGE_SIZE;
+  }, [page]);
+
+  <span class="keyword">const</span> { sentinelRef, isLoading, hasMore } = <span class="function">useInfiniteScroll</span>(fetchMore);
+
+  <span class="keyword">return</span> (
+    &lt;<span class="tag">div</span>&gt;
+      &lt;<span class="tag">h1</span>&gt;Products&lt;/<span class="tag">h1</span>&gt;
+      &lt;<span class="tag">div</span> <span class="attr">className</span>=<span class="string">"product-grid"</span>&gt;
+        {products.<span class="function">map</span>(product =&gt; (
+          &lt;<span class="component">ProductCard</span> <span class="attr">key</span>={product.id} <span class="attr">product</span>={product} /&gt;
+        ))}
+      &lt;/<span class="tag">div</span>&gt;
+
+      {<span class="comment">/* Invisible sentinel &mdash; triggers loading when scrolled near */</span>}
+      &lt;<span class="tag">div</span> <span class="attr">ref</span>={sentinelRef} <span class="attr">style</span>={{ height: <span class="string">'1px'</span> }} /&gt;
+
+      {isLoading && &lt;<span class="tag">p</span> <span class="attr">className</span>=<span class="string">"loading"</span>&gt;Loading more products...&lt;/<span class="tag">p</span>&gt;}
+      {!hasMore && &lt;<span class="tag">p</span> <span class="attr">className</span>=<span class="string">"end"</span>&gt;You've reached the end!&lt;/<span class="tag">p</span>&gt;}
+    &lt;/<span class="tag">div</span>&gt;
+  );
+}</code></pre>
+
+<h2>Technique Comparison</h2>
+
+<table class="comparison-table">
+  <thead>
+    <tr>
+      <th>Technique</th>
+      <th>Use Case</th>
+      <th>Browser Support</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>loading="lazy"</code></td>
+      <td>Images, iframes</td>
+      <td>All modern browsers</td>
+    </tr>
+    <tr>
+      <td><code>IntersectionObserver</code></td>
+      <td>Components, custom logic, animations</td>
+      <td>All modern browsers</td>
+    </tr>
+    <tr>
+      <td><code>React.lazy</code> + <code>Suspense</code></td>
+      <td>Code splitting (see <a href="08-code-splitting.html" style="color:var(--accent)">Pattern 08</a>)</td>
+      <td>React 16.6+</td>
+    </tr>
+    <tr>
+      <td>Libraries (<code>react-intersection-observer</code>, <code>react-lazyload</code>)</td>
+      <td>Production apps needing polyfills and extras</td>
+      <td>N/A (library-handled)</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>Popular Libraries Worth Knowing</h3>
+<ul>
+  <li><strong><code>react-intersection-observer</code></strong> &mdash; Lightweight hook-based API wrapping IntersectionObserver. Great for most use cases.</li>
+  <li><strong><code>react-lazyload</code></strong> &mdash; Simple component-level lazy loading with scroll and resize event support.</li>
+  <li><strong><code>react-virtualized</code></strong> / <strong><code>react-window</code></strong> &mdash; For extremely long lists, virtualizes DOM nodes so only visible items are rendered.</li>
+</ul>
+
+<h2>Performance Metrics That Matter</h2>
+
+<div class="metrics-row">
+  <div class="metric-card">
+    <div class="metric-label">LCP</div>
+    <div class="metric-value">-40%</div>
+    <div class="metric-desc">Largest Contentful Paint improves when you stop loading off-screen images</div>
+  </div>
+  <div class="metric-card">
+    <div class="metric-label">TTI</div>
+    <div class="metric-value">-30%</div>
+    <div class="metric-desc">Time to Interactive drops when fewer resources compete for the main thread</div>
+  </div>
+  <div class="metric-card">
+    <div class="metric-label">Bandwidth</div>
+    <div class="metric-value">-70%</div>
+    <div class="metric-desc">Users only download images they actually scroll to see</div>
+  </div>
+</div>
+
+<h2>When to Use &amp; When Not To</h2>
+
+<div class="card-row">
+  <div class="card do-card">
+    <h4>When to Use</h4>
+    <ul>
+      <li>Image-heavy pages (galleries, e-commerce grids)</li>
+      <li>Long scrollable content with sections below the fold</li>
+      <li>Dashboards with heavy chart/map widgets below the fold</li>
+      <li>Infinite scroll lists (feeds, search results)</li>
+      <li>Mobile-first apps where bandwidth and data plans matter</li>
+    </ul>
+  </div>
+  <div class="card dont-card">
+    <h4>When NOT to Use</h4>
+    <ul>
+      <li>Above-the-fold critical content &mdash; lazy loading hero images <strong>hurts LCP!</strong></li>
+      <li>Small pages with little content (overhead not worth it)</li>
+      <li>SEO-critical images &mdash; use eager loading so crawlers see them</li>
+      <li>Content that is always visible without scrolling</li>
+      <li>Print stylesheets &mdash; all content must be present</li>
+    </ul>
+  </div>
+</div>
+
+<div class="key-takeaway">
+  <h3>Key Takeaway</h3>
+  <p>
+    Lazy loading is about respect for the user's resources &mdash; don't load what they can't see.
+    Start with native <code>loading="lazy"</code> for images, use <code>IntersectionObserver</code>
+    for components, and <strong>always keep above-the-fold content eager</strong>. The best lazy loading
+    is invisible to the user &mdash; content appears right when they need it, not a moment too late.
+  </p>
+</div>
+
+<nav class="nav">
+  <a href="09-context-module.html">&larr; Previous: Context Module</a>
+  <a href="11-slot-pattern.html">Next: Slot Pattern &rarr;</a>
+</nav>
+
+</body>
+</html>

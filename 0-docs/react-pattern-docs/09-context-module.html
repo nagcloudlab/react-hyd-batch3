@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Context Module Functions | React Patterns</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --accent: #dc2626;
+      --accent-light: #fef2f2;
+      --problem-bg: #fff7ed;
+      --problem-border: #fb923c;
+      --solution-bg: #f0fdf4;
+      --solution-border: #4ade80;
+      --code-bg: #1e1e2e;
+      --code-text: #cdd6f4;
+      --text: #1e293b;
+      --text-light: #64748b;
+      --surface: #ffffff;
+      --border: #e2e8f0;
+      --font: 'Inter', -apple-system, sans-serif;
+      --mono: 'Fira Code', 'Consolas', monospace;
+    }
+    body { font-family: var(--font); color: var(--text); line-height: 1.7; max-width: 960px; margin: 0 auto; padding: 2rem; background: #fafbfc; }
+    h1 { font-size: 2.5rem; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 0.5rem; }
+    h2 { font-size: 1.5rem; font-weight: 700; margin: 2.5rem 0 1rem; color: var(--accent); }
+    h3 { font-size: 1.15rem; font-weight: 600; margin: 1.5rem 0 0.75rem; }
+    p, li { font-size: 1.05rem; margin-bottom: 0.75rem; }
+    ul { padding-left: 1.5rem; }
+    .badge { display: inline-block; background: var(--accent); color: #fff; font-size: 0.8rem; font-weight: 600; padding: 0.25rem 0.75rem; border-radius: 999px; margin-bottom: 1rem; letter-spacing: 0.05em; text-transform: uppercase; }
+    .subtitle { font-size: 1.25rem; color: var(--text-light); font-weight: 400; margin-bottom: 2rem; }
+    .problem-box, .solution-box { padding: 1.5rem 2rem; border-radius: 12px; margin: 1.5rem 0; border-left: 4px solid; }
+    .problem-box { background: var(--problem-bg); border-color: var(--problem-border); }
+    .problem-box h3::before { content: '\26A0 '; }
+    .solution-box { background: var(--solution-bg); border-color: var(--solution-border); }
+    .solution-box h3::before { content: '\2726 '; }
+    pre { background: var(--code-bg); color: var(--code-text); padding: 1.5rem; border-radius: 10px; overflow-x: auto; margin: 1rem 0; font-size: 0.92rem; line-height: 1.6; }
+    code { font-family: var(--mono); font-size: 0.9em; }
+    :not(pre) > code { background: #f1f5f9; padding: 0.15em 0.4em; border-radius: 4px; color: var(--accent); }
+    .diagram { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 2rem; margin: 2rem 0; text-align: center; }
+    .diagram svg { max-width: 100%; height: auto; }
+    .card-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin: 1.5rem 0; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1.25rem 1.5rem; }
+    .card h4 { font-weight: 600; margin-bottom: 0.5rem; }
+    .do-card { border-left: 4px solid #22c55e; }
+    .dont-card { border-left: 4px solid #ef4444; }
+    .nav { display: flex; justify-content: space-between; padding: 1rem 0; border-top: 1px solid var(--border); margin-top: 3rem; font-size: 0.95rem; }
+    .nav a { color: var(--accent); text-decoration: none; font-weight: 500; }
+    .nav a:hover { text-decoration: underline; }
+    .top-nav { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border); }
+    .top-nav a { color: var(--text-light); text-decoration: none; font-size: 0.85rem; padding: 0.3rem 0.7rem; border-radius: 6px; background: #f1f5f9; transition: all 0.2s; }
+    .top-nav a:hover, .top-nav a.active { background: var(--accent); color: #fff; }
+    .key-takeaway { background: var(--accent-light); border-radius: 12px; padding: 1.5rem 2rem; margin: 2rem 0; }
+    .key-takeaway h3 { color: var(--accent); margin-top: 0; }
+    .comment { color: #6a9955; }
+    .keyword { color: #c586c0; }
+    .function { color: #dcdcaa; }
+    .string { color: #ce9178; }
+    .component { color: #4ec9b0; }
+    .tag { color: #569cd6; }
+    .attr { color: #9cdcfe; }
+    @media print { body { max-width: 100%; } .top-nav, .nav { display: none; } }
+
+    .file-label {
+      display: inline-block;
+      background: #313244;
+      color: #a6adc8;
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      padding: 0.35rem 1rem;
+      border-radius: 10px 10px 0 0;
+      margin-bottom: -1rem;
+      position: relative;
+      z-index: 1;
+    }
+    .module-structure {
+      background: var(--surface);
+      border: 2px dashed var(--border);
+      border-radius: 12px;
+      padding: 1.5rem 2rem;
+      margin: 1.5rem 0;
+      font-family: var(--mono);
+      font-size: 0.92rem;
+      line-height: 2;
+      color: var(--text);
+    }
+    .module-structure .export-name { color: var(--accent); font-weight: 600; }
+    .module-structure .export-desc { color: var(--text-light); font-family: var(--font); font-size: 0.88rem; }
+  </style>
+</head>
+<body>
+
+  <nav class="top-nav">
+    <a href="index.html">Home</a>
+    <a href="01-compound-components.html">Compound Components</a>
+    <a href="02-render-props.html">Render Props</a>
+    <a href="03-higher-order-components.html">HOCs</a>
+    <a href="04-custom-hooks.html">Custom Hooks</a>
+    <a href="05-container-presentational.html">Container/Presentational</a>
+    <a href="06-state-reducer.html">State Reducer</a>
+    <a href="07-memoization.html">Memoization</a>
+    <a href="08-code-splitting.html">Code Splitting</a>
+    <a href="09-context-module.html" class="active">Context Module</a>
+    <a href="10-lazy-loading.html">Lazy Loading</a>
+    <a href="11-slot-pattern.html">Slot Pattern</a>
+  </nav>
+
+  <span class="badge">Performance Pattern</span>
+  <h1>Context Module Functions</h1>
+  <p class="subtitle">Co-locate context helpers with the context itself to keep consumers clean and enable tree-shaking</p>
+
+  <!-- ───────── Problem ───────── -->
+  <h2>The Problem</h2>
+
+  <div class="problem-box">
+    <h3>Scattered Dispatch Logic</h3>
+    <p>When using React Context with <code>useReducer</code>, every consumer must know the exact action type strings and payload shapes. This means duplicated logic, fragile string constants, and tight coupling between your context internals and every component that consumes it.</p>
+  </div>
+
+  <p>Imagine a shopping cart context consumed by multiple components. Each one constructs its own dispatch calls:</p>
+
+  <div class="file-label">ProductCard.jsx</div>
+  <pre><code><span class="keyword">function</span> <span class="component">ProductCard</span>({ <span class="attr">product</span> }) {
+  <span class="keyword">const</span> { dispatch } = <span class="function">useCart</span>();
+
+  <span class="keyword">return</span> (
+    &lt;<span class="tag">button</span> <span class="attr">onClick</span>={() =&gt;
+      <span class="function">dispatch</span>({
+        <span class="attr">type</span>: <span class="string">'ADD_ITEM'</span>,           <span class="comment">// string typo risk</span>
+        <span class="attr">payload</span>: { <span class="attr">id</span>: product.id, <span class="attr">name</span>: product.name, <span class="attr">price</span>: product.price }
+      })
+    }&gt;
+      Add to Cart
+    &lt;/<span class="tag">button</span>&gt;
+  );
+}</code></pre>
+
+  <div class="file-label">CartSidebar.jsx</div>
+  <pre><code><span class="keyword">function</span> <span class="component">CartSidebar</span>() {
+  <span class="keyword">const</span> { state, dispatch } = <span class="function">useCart</span>();
+
+  <span class="keyword">const</span> <span class="function">handleRemove</span> = (<span class="attr">itemId</span>) =&gt; {
+    <span class="function">dispatch</span>({ <span class="attr">type</span>: <span class="string">'REMOVE_ITEM'</span>, <span class="attr">payload</span>: { <span class="attr">id</span>: itemId } });
+  };
+
+  <span class="keyword">const</span> <span class="function">handleQuantity</span> = (<span class="attr">itemId</span>, <span class="attr">qty</span>) =&gt; {
+    <span class="function">dispatch</span>({
+      <span class="attr">type</span>: <span class="string">'UPDATE_QUANTITY'</span>,    <span class="comment">// was it UPDATE_QUANTITY or SET_QUANTITY?</span>
+      <span class="attr">payload</span>: { <span class="attr">id</span>: itemId, <span class="attr">quantity</span>: qty }
+    });
+  };
+
+  <span class="keyword">const</span> <span class="function">handleClear</span> = () =&gt; {
+    <span class="function">dispatch</span>({ <span class="attr">type</span>: <span class="string">'CLEAR_CART'</span> }); <span class="comment">// duplicated across components</span>
+  };
+
+  <span class="comment">// ... render logic</span>
+}</code></pre>
+
+  <div class="file-label">CheckoutPage.jsx</div>
+  <pre><code><span class="keyword">function</span> <span class="component">CheckoutPage</span>() {
+  <span class="keyword">const</span> { state, dispatch } = <span class="function">useCart</span>();
+
+  <span class="keyword">const</span> <span class="function">handleCheckout</span> = <span class="keyword">async</span> () =&gt; {
+    <span class="keyword">await</span> <span class="function">submitOrder</span>(state.items);
+    <span class="function">dispatch</span>({ <span class="attr">type</span>: <span class="string">'CLEAR_CART'</span> }); <span class="comment">// same logic, repeated again</span>
+  };
+
+  <span class="comment">// ... render logic</span>
+}</code></pre>
+
+  <p>Every consumer is tightly coupled to internal implementation details: action type strings, payload shapes, and dispatch mechanics. Change an action type, and you must update every file.</p>
+
+  <!-- ───────── Diagram ───────── -->
+  <h2>Architecture Comparison</h2>
+
+  <div class="diagram">
+    <svg viewBox="0 0 880 420" xmlns="http://www.w3.org/2000/svg" font-family="Inter, sans-serif">
+      <!-- LEFT SIDE: Without Context Module -->
+      <text x="200" y="30" text-anchor="middle" font-size="15" font-weight="700" fill="#dc2626">Without Context Module</text>
+
+      <!-- Context box -->
+      <rect x="130" y="50" width="140" height="50" rx="10" fill="#fef2f2" stroke="#dc2626" stroke-width="1.5"/>
+      <text x="200" y="80" text-anchor="middle" font-size="12" font-weight="600" fill="#1e293b">CartContext</text>
+
+      <!-- Consumer boxes -->
+      <rect x="20" y="160" width="120" height="60" rx="8" fill="#fff7ed" stroke="#fb923c" stroke-width="1.5"/>
+      <text x="80" y="184" text-anchor="middle" font-size="10" font-weight="600" fill="#1e293b">ProductCard</text>
+      <text x="80" y="200" text-anchor="middle" font-size="8" fill="#64748b">dispatch({type:...})</text>
+
+      <rect x="160" y="160" width="120" height="60" rx="8" fill="#fff7ed" stroke="#fb923c" stroke-width="1.5"/>
+      <text x="220" y="184" text-anchor="middle" font-size="10" font-weight="600" fill="#1e293b">CartSidebar</text>
+      <text x="220" y="200" text-anchor="middle" font-size="8" fill="#64748b">dispatch({type:...})</text>
+
+      <rect x="300" y="160" width="120" height="60" rx="8" fill="#fff7ed" stroke="#fb923c" stroke-width="1.5"/>
+      <text x="360" y="184" text-anchor="middle" font-size="10" font-weight="600" fill="#1e293b">CheckoutPage</text>
+      <text x="360" y="200" text-anchor="middle" font-size="8" fill="#64748b">dispatch({type:...})</text>
+
+      <!-- Messy arrows -->
+      <line x1="170" y1="100" x2="80" y2="160" stroke="#fb923c" stroke-width="1.5" stroke-dasharray="4,3"/>
+      <line x1="200" y1="100" x2="220" y2="160" stroke="#fb923c" stroke-width="1.5" stroke-dasharray="4,3"/>
+      <line x1="230" y1="100" x2="360" y2="160" stroke="#fb923c" stroke-width="1.5" stroke-dasharray="4,3"/>
+
+      <!-- Duplication labels -->
+      <rect x="40" y="240" width="100" height="28" rx="5" fill="#fef2f2" stroke="#dc2626" stroke-width="1"/>
+      <text x="90" y="258" text-anchor="middle" font-size="8" fill="#dc2626">'ADD_ITEM'</text>
+
+      <rect x="170" y="240" width="100" height="28" rx="5" fill="#fef2f2" stroke="#dc2626" stroke-width="1"/>
+      <text x="220" y="258" text-anchor="middle" font-size="8" fill="#dc2626">'REMOVE_ITEM'</text>
+
+      <rect x="310" y="240" width="100" height="28" rx="5" fill="#fef2f2" stroke="#dc2626" stroke-width="1"/>
+      <text x="360" y="258" text-anchor="middle" font-size="8" fill="#dc2626">'CLEAR_CART'</text>
+
+      <line x1="80" y1="220" x2="90" y2="240" stroke="#dc2626" stroke-width="1" stroke-dasharray="3,2"/>
+      <line x1="220" y1="220" x2="220" y2="240" stroke="#dc2626" stroke-width="1" stroke-dasharray="3,2"/>
+      <line x1="360" y1="220" x2="360" y2="240" stroke="#dc2626" stroke-width="1" stroke-dasharray="3,2"/>
+
+      <text x="220" y="296" text-anchor="middle" font-size="11" font-weight="600" fill="#dc2626">Duplicated action logic everywhere</text>
+
+      <!-- Divider -->
+      <line x1="440" y1="20" x2="440" y2="310" stroke="#e2e8f0" stroke-width="2" stroke-dasharray="6,4"/>
+
+      <!-- RIGHT SIDE: With Context Module -->
+      <text x="660" y="30" text-anchor="middle" font-size="15" font-weight="700" fill="#22c55e">With Context Module</text>
+
+      <!-- Context Module box -->
+      <rect x="570" y="45" width="180" height="110" rx="12" fill="#f0fdf4" stroke="#22c55e" stroke-width="2"/>
+      <text x="660" y="70" text-anchor="middle" font-size="12" font-weight="700" fill="#1e293b">cart-context.js</text>
+      <line x1="590" y1="80" x2="730" y2="80" stroke="#22c55e" stroke-width="0.5"/>
+      <text x="660" y="98" text-anchor="middle" font-size="10" fill="#64748b" font-family="Fira Code, monospace">CartProvider</text>
+      <text x="660" y="114" text-anchor="middle" font-size="10" fill="#64748b" font-family="Fira Code, monospace">useCart</text>
+      <text x="660" y="130" text-anchor="middle" font-size="10" fill="#22c55e" font-weight="600" font-family="Fira Code, monospace">addItem / removeItem / clear</text>
+
+      <!-- Consumer boxes -->
+      <rect x="480" y="210" width="120" height="50" rx="8" fill="#fff" stroke="#e2e8f0" stroke-width="1.5"/>
+      <text x="540" y="232" text-anchor="middle" font-size="10" font-weight="600" fill="#1e293b">ProductCard</text>
+      <text x="540" y="246" text-anchor="middle" font-size="8" fill="#22c55e">addItem(dispatch, ...)</text>
+
+      <rect x="620" y="210" width="120" height="50" rx="8" fill="#fff" stroke="#e2e8f0" stroke-width="1.5"/>
+      <text x="680" y="232" text-anchor="middle" font-size="10" font-weight="600" fill="#1e293b">CartSidebar</text>
+      <text x="680" y="246" text-anchor="middle" font-size="8" fill="#22c55e">removeItem(dispatch, ...)</text>
+
+      <rect x="760" y="210" width="120" height="50" rx="8" fill="#fff" stroke="#e2e8f0" stroke-width="1.5"/>
+      <text x="820" y="232" text-anchor="middle" font-size="10" font-weight="600" fill="#1e293b">CheckoutPage</text>
+      <text x="820" y="246" text-anchor="middle" font-size="8" fill="#22c55e">clear(dispatch)</text>
+
+      <!-- Clean arrows -->
+      <line x1="620" y1="155" x2="540" y2="210" stroke="#22c55e" stroke-width="2"/>
+      <polygon points="540,210 546,202 534,202" fill="#22c55e"/>
+
+      <line x1="660" y1="155" x2="680" y2="210" stroke="#22c55e" stroke-width="2"/>
+      <polygon points="680,210 686,202 674,202" fill="#22c55e"/>
+
+      <line x1="700" y1="155" x2="820" y2="210" stroke="#22c55e" stroke-width="2"/>
+      <polygon points="820,210 826,202 814,202" fill="#22c55e"/>
+
+      <text x="660" y="296" text-anchor="middle" font-size="11" font-weight="600" fill="#22c55e">Single source of truth, clean imports</text>
+    </svg>
+  </div>
+
+  <!-- ───────── Solution ───────── -->
+  <h2>The Solution</h2>
+
+  <div class="solution-box">
+    <h3>Co-locate Helper Functions with Context</h3>
+    <p>Create a <strong>context module</strong> that exports everything consumers need: the Provider, a custom hook, and named helper functions that encapsulate all dispatch logic. Consumers never touch raw dispatch or action types directly.</p>
+  </div>
+
+  <h3>Module Structure</h3>
+
+  <div class="module-structure">
+    <span class="comment">// cart-context.js exports:</span><br/>
+    <span class="export-name">CartProvider</span> <span class="export-desc">-- the context provider wrapping useReducer</span><br/>
+    <span class="export-name">useCart</span> <span class="export-desc">-- custom hook to consume state + dispatch</span><br/>
+    <span class="export-name">addItem(dispatch, item)</span> <span class="export-desc">-- helper to add an item</span><br/>
+    <span class="export-name">removeItem(dispatch, itemId)</span> <span class="export-desc">-- helper to remove an item</span><br/>
+    <span class="export-name">updateQuantity(dispatch, itemId, qty)</span> <span class="export-desc">-- helper to update quantity</span><br/>
+    <span class="export-name">clearCart(dispatch)</span> <span class="export-desc">-- helper to clear the cart</span>
+  </div>
+
+  <h3>Step 1: Build the Context Module</h3>
+
+  <div class="file-label">cart-context.js</div>
+  <pre><code><span class="keyword">import</span> { createContext, useContext, useReducer } <span class="keyword">from</span> <span class="string">'react'</span>;
+
+<span class="comment">// ── Private: action types never leave this file ──</span>
+<span class="keyword">const</span> <span class="attr">ActionTypes</span> = {
+  ADD_ITEM:        <span class="string">'ADD_ITEM'</span>,
+  REMOVE_ITEM:     <span class="string">'REMOVE_ITEM'</span>,
+  UPDATE_QUANTITY: <span class="string">'UPDATE_QUANTITY'</span>,
+  CLEAR_CART:      <span class="string">'CLEAR_CART'</span>,
+};
+
+<span class="comment">// ── Private: reducer stays internal ──</span>
+<span class="keyword">function</span> <span class="function">cartReducer</span>(<span class="attr">state</span>, <span class="attr">action</span>) {
+  <span class="keyword">switch</span> (action.type) {
+    <span class="keyword">case</span> ActionTypes.ADD_ITEM:
+      <span class="keyword">return</span> { ...state, <span class="attr">items</span>: [...state.items, action.payload] };
+    <span class="keyword">case</span> ActionTypes.REMOVE_ITEM:
+      <span class="keyword">return</span> { ...state, <span class="attr">items</span>: state.items.<span class="function">filter</span>(i =&gt; i.id !== action.payload.id) };
+    <span class="keyword">case</span> ActionTypes.UPDATE_QUANTITY:
+      <span class="keyword">return</span> {
+        ...state,
+        <span class="attr">items</span>: state.items.<span class="function">map</span>(i =&gt;
+          i.id === action.payload.id ? { ...i, <span class="attr">quantity</span>: action.payload.quantity } : i
+        ),
+      };
+    <span class="keyword">case</span> ActionTypes.CLEAR_CART:
+      <span class="keyword">return</span> { ...state, <span class="attr">items</span>: [] };
+    <span class="keyword">default</span>:
+      <span class="keyword">throw new</span> Error(<span class="string">`Unhandled action: ${action.type}`</span>);
+  }
+}
+
+<span class="comment">// ── Context + Provider ──</span>
+<span class="keyword">const</span> <span class="attr">CartContext</span> = <span class="function">createContext</span>();
+
+<span class="keyword">function</span> <span class="component">CartProvider</span>({ <span class="attr">children</span> }) {
+  <span class="keyword">const</span> [state, dispatch] = <span class="function">useReducer</span>(cartReducer, { <span class="attr">items</span>: [] });
+  <span class="keyword">const</span> <span class="attr">value</span> = { state, dispatch };
+  <span class="keyword">return</span> &lt;<span class="tag">CartContext.Provider</span> <span class="attr">value</span>={value}&gt;{children}&lt;/<span class="tag">CartContext.Provider</span>&gt;;
+}
+
+<span class="comment">// ── Custom hook ──</span>
+<span class="keyword">function</span> <span class="function">useCart</span>() {
+  <span class="keyword">const</span> <span class="attr">context</span> = <span class="function">useContext</span>(CartContext);
+  <span class="keyword">if</span> (!context) {
+    <span class="keyword">throw new</span> Error(<span class="string">'useCart must be used within a CartProvider'</span>);
+  }
+  <span class="keyword">return</span> context;
+}
+
+<span class="comment">// ── Context Module Functions (the key pattern!) ──</span>
+<span class="comment">// Each helper takes dispatch as its first argument.</span>
+<span class="comment">// This makes them pure, testable, and tree-shakeable.</span>
+
+<span class="keyword">function</span> <span class="function">addItem</span>(<span class="attr">dispatch</span>, <span class="attr">item</span>) {
+  <span class="function">dispatch</span>({ <span class="attr">type</span>: ActionTypes.ADD_ITEM, <span class="attr">payload</span>: item });
+}
+
+<span class="keyword">function</span> <span class="function">removeItem</span>(<span class="attr">dispatch</span>, <span class="attr">itemId</span>) {
+  <span class="function">dispatch</span>({ <span class="attr">type</span>: ActionTypes.REMOVE_ITEM, <span class="attr">payload</span>: { <span class="attr">id</span>: itemId } });
+}
+
+<span class="keyword">function</span> <span class="function">updateQuantity</span>(<span class="attr">dispatch</span>, <span class="attr">itemId</span>, <span class="attr">quantity</span>) {
+  <span class="function">dispatch</span>({ <span class="attr">type</span>: ActionTypes.UPDATE_QUANTITY, <span class="attr">payload</span>: { <span class="attr">id</span>: itemId, quantity } });
+}
+
+<span class="keyword">function</span> <span class="function">clearCart</span>(<span class="attr">dispatch</span>) {
+  <span class="function">dispatch</span>({ <span class="attr">type</span>: ActionTypes.CLEAR_CART });
+}
+
+<span class="comment">// ── Public API: everything the consumers need ──</span>
+<span class="keyword">export</span> { CartProvider, useCart, addItem, removeItem, updateQuantity, clearCart };</code></pre>
+
+  <h3>Step 2: Clean Consumer Components</h3>
+
+  <div class="file-label">ProductCard.jsx</div>
+  <pre><code><span class="keyword">import</span> { useCart, addItem } <span class="keyword">from</span> <span class="string">'./cart-context'</span>;
+
+<span class="keyword">function</span> <span class="component">ProductCard</span>({ <span class="attr">product</span> }) {
+  <span class="keyword">const</span> { dispatch } = <span class="function">useCart</span>();
+
+  <span class="keyword">return</span> (
+    &lt;<span class="tag">div</span> <span class="attr">className</span>=<span class="string">"product-card"</span>&gt;
+      &lt;<span class="tag">h3</span>&gt;{product.name}&lt;/<span class="tag">h3</span>&gt;
+      &lt;<span class="tag">p</span>&gt;${product.price}&lt;/<span class="tag">p</span>&gt;
+      &lt;<span class="tag">button</span> <span class="attr">onClick</span>={() =&gt; <span class="function">addItem</span>(dispatch, product)}&gt;
+        Add to Cart
+      &lt;/<span class="tag">button</span>&gt;
+    &lt;/<span class="tag">div</span>&gt;
+  );
+}</code></pre>
+
+  <div class="file-label">CartSidebar.jsx</div>
+  <pre><code><span class="keyword">import</span> { useCart, removeItem, updateQuantity, clearCart } <span class="keyword">from</span> <span class="string">'./cart-context'</span>;
+
+<span class="keyword">function</span> <span class="component">CartSidebar</span>() {
+  <span class="keyword">const</span> { state, dispatch } = <span class="function">useCart</span>();
+
+  <span class="keyword">return</span> (
+    &lt;<span class="tag">aside</span>&gt;
+      {state.items.<span class="function">map</span>(item =&gt; (
+        &lt;<span class="tag">div</span> <span class="attr">key</span>={item.id}&gt;
+          &lt;<span class="tag">span</span>&gt;{item.name} x{item.quantity}&lt;/<span class="tag">span</span>&gt;
+          &lt;<span class="tag">button</span> <span class="attr">onClick</span>={() =&gt; <span class="function">updateQuantity</span>(dispatch, item.id, item.quantity + 1)}&gt;+&lt;/<span class="tag">button</span>&gt;
+          &lt;<span class="tag">button</span> <span class="attr">onClick</span>={() =&gt; <span class="function">removeItem</span>(dispatch, item.id)}&gt;Remove&lt;/<span class="tag">button</span>&gt;
+        &lt;/<span class="tag">div</span>&gt;
+      ))}
+      &lt;<span class="tag">button</span> <span class="attr">onClick</span>={() =&gt; <span class="function">clearCart</span>(dispatch)}&gt;Clear Cart&lt;/<span class="tag">button</span>&gt;
+    &lt;/<span class="tag">aside</span>&gt;
+  );
+}</code></pre>
+
+  <div class="file-label">CheckoutPage.jsx</div>
+  <pre><code><span class="keyword">import</span> { useCart, clearCart } <span class="keyword">from</span> <span class="string">'./cart-context'</span>;
+<span class="comment">// Only imports what it needs -- tree-shaking removes the rest!</span>
+
+<span class="keyword">function</span> <span class="component">CheckoutPage</span>() {
+  <span class="keyword">const</span> { state, dispatch } = <span class="function">useCart</span>();
+
+  <span class="keyword">const</span> <span class="function">handleCheckout</span> = <span class="keyword">async</span> () =&gt; {
+    <span class="keyword">await</span> <span class="function">submitOrder</span>(state.items);
+    <span class="function">clearCart</span>(dispatch);  <span class="comment">// clean, intention-revealing call</span>
+  };
+
+  <span class="keyword">return</span> &lt;<span class="tag">button</span> <span class="attr">onClick</span>={handleCheckout}&gt;Place Order&lt;/<span class="tag">button</span>&gt;;
+}</code></pre>
+
+  <!-- ───────── Simpler Counter Example ───────── -->
+  <h2>Minimal Example: Counter</h2>
+
+  <p>The same pattern works at any scale. Here is the simplest possible context module:</p>
+
+  <div class="file-label">counter-context.js</div>
+  <pre><code><span class="keyword">import</span> { createContext, useContext, useReducer } <span class="keyword">from</span> <span class="string">'react'</span>;
+
+<span class="keyword">const</span> <span class="attr">CounterContext</span> = <span class="function">createContext</span>();
+
+<span class="keyword">function</span> <span class="function">counterReducer</span>(<span class="attr">state</span>, <span class="attr">action</span>) {
+  <span class="keyword">switch</span> (action.type) {
+    <span class="keyword">case</span> <span class="string">'INCREMENT'</span>: <span class="keyword">return</span> { <span class="attr">count</span>: state.count + 1 };
+    <span class="keyword">case</span> <span class="string">'DECREMENT'</span>: <span class="keyword">return</span> { <span class="attr">count</span>: state.count - 1 };
+    <span class="keyword">case</span> <span class="string">'RESET'</span>:     <span class="keyword">return</span> { <span class="attr">count</span>: 0 };
+    <span class="keyword">default</span>: <span class="keyword">throw new</span> Error(<span class="string">`Unhandled: ${action.type}`</span>);
+  }
+}
+
+<span class="keyword">function</span> <span class="component">CounterProvider</span>({ <span class="attr">children</span> }) {
+  <span class="keyword">const</span> [state, dispatch] = <span class="function">useReducer</span>(counterReducer, { <span class="attr">count</span>: 0 });
+  <span class="keyword">return</span> (
+    &lt;<span class="tag">CounterContext.Provider</span> <span class="attr">value</span>={{ state, dispatch }}&gt;
+      {children}
+    &lt;/<span class="tag">CounterContext.Provider</span>&gt;
+  );
+}
+
+<span class="keyword">function</span> <span class="function">useCounter</span>() {
+  <span class="keyword">const</span> <span class="attr">ctx</span> = <span class="function">useContext</span>(CounterContext);
+  <span class="keyword">if</span> (!ctx) <span class="keyword">throw new</span> Error(<span class="string">'useCounter must be within CounterProvider'</span>);
+  <span class="keyword">return</span> ctx;
+}
+
+<span class="comment">// Context Module Functions</span>
+<span class="keyword">const</span> <span class="function">increment</span> = (<span class="attr">dispatch</span>) =&gt; <span class="function">dispatch</span>({ <span class="attr">type</span>: <span class="string">'INCREMENT'</span> });
+<span class="keyword">const</span> <span class="function">decrement</span> = (<span class="attr">dispatch</span>) =&gt; <span class="function">dispatch</span>({ <span class="attr">type</span>: <span class="string">'DECREMENT'</span> });
+<span class="keyword">const</span> <span class="function">reset</span>     = (<span class="attr">dispatch</span>) =&gt; <span class="function">dispatch</span>({ <span class="attr">type</span>: <span class="string">'RESET'</span> });
+
+<span class="keyword">export</span> { CounterProvider, useCounter, increment, decrement, reset };</code></pre>
+
+  <div class="file-label">App.jsx</div>
+  <pre><code><span class="keyword">import</span> { CounterProvider, useCounter, increment, decrement, reset } <span class="keyword">from</span> <span class="string">'./counter-context'</span>;
+
+<span class="keyword">function</span> <span class="component">Counter</span>() {
+  <span class="keyword">const</span> { state, dispatch } = <span class="function">useCounter</span>();
+
+  <span class="keyword">return</span> (
+    &lt;<span class="tag">div</span>&gt;
+      &lt;<span class="tag">p</span>&gt;Count: {state.count}&lt;/<span class="tag">p</span>&gt;
+      &lt;<span class="tag">button</span> <span class="attr">onClick</span>={() =&gt; <span class="function">increment</span>(dispatch)}&gt;+&lt;/<span class="tag">button</span>&gt;
+      &lt;<span class="tag">button</span> <span class="attr">onClick</span>={() =&gt; <span class="function">decrement</span>(dispatch)}&gt;-&lt;/<span class="tag">button</span>&gt;
+      &lt;<span class="tag">button</span> <span class="attr">onClick</span>={() =&gt; <span class="function">reset</span>(dispatch)}&gt;Reset&lt;/<span class="tag">button</span>&gt;
+    &lt;/<span class="tag">div</span>&gt;
+  );
+}
+
+<span class="keyword">function</span> <span class="component">App</span>() {
+  <span class="keyword">return</span> (
+    &lt;<span class="component">CounterProvider</span>&gt;
+      &lt;<span class="component">Counter</span> /&gt;
+    &lt;/<span class="component">CounterProvider</span>&gt;
+  );
+}</code></pre>
+
+  <!-- ───────── Benefits ───────── -->
+  <h2>Why This Pattern Works</h2>
+
+  <div class="card-row">
+    <div class="card do-card">
+      <h4>Single Source of Truth</h4>
+      <p>Action types and payload shapes live in exactly one file. Change them once, and every consumer stays in sync.</p>
+    </div>
+    <div class="card do-card">
+      <h4>Typo-Proof</h4>
+      <p>Consumers never type string action names. Misspelling <code>addItem</code> gives a clear import error, not a silent runtime bug.</p>
+    </div>
+  </div>
+  <div class="card-row">
+    <div class="card do-card">
+      <h4>Tree-Shakeable</h4>
+      <p>Because helpers are named exports, bundlers can drop any function a consumer does not import. Smaller bundles for free.</p>
+    </div>
+    <div class="card do-card">
+      <h4>Easy to Test</h4>
+      <p>Each helper is a pure function: pass a mock dispatch, assert the right action was dispatched. No rendering needed.</p>
+    </div>
+  </div>
+  <div class="card-row">
+    <div class="card do-card">
+      <h4>Colocation Principle</h4>
+      <p>Related things stay together. The context, reducer, hook, and actions all live in one module -- easy to find and reason about.</p>
+    </div>
+    <div class="card do-card">
+      <h4>Async-Ready</h4>
+      <p>Helpers can be <code>async</code> and dispatch multiple actions (loading, success, error) without leaking that logic into components.</p>
+    </div>
+  </div>
+
+  <!-- ───────── When To Use ───────── -->
+  <h2>When to Use</h2>
+
+  <div class="card-row">
+    <div class="card do-card">
+      <h4>Use When</h4>
+      <ul>
+        <li>Your context uses <code>useReducer</code> with multiple action types</li>
+        <li>Multiple components dispatch the same actions</li>
+        <li>Actions involve complex payload construction or async logic</li>
+        <li>You want to test dispatch logic independently of UI</li>
+      </ul>
+    </div>
+    <div class="card dont-card">
+      <h4>Skip When</h4>
+      <ul>
+        <li>Your context holds simple state (e.g., a theme toggle with <code>useState</code>)</li>
+        <li>Consumers only read context values and never dispatch</li>
+        <li>There is only one action type -- the overhead is not worth it</li>
+        <li>You are already using a state management library like Zustand or Redux Toolkit</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ───────── Testing ───────── -->
+  <h2>Testing Context Module Functions</h2>
+
+  <p>Because helpers are plain functions that accept <code>dispatch</code> as an argument, they are trivially testable without rendering any component:</p>
+
+  <div class="file-label">cart-context.test.js</div>
+  <pre><code><span class="keyword">import</span> { addItem, removeItem, clearCart } <span class="keyword">from</span> <span class="string">'./cart-context'</span>;
+
+<span class="function">test</span>(<span class="string">'addItem dispatches ADD_ITEM with the given product'</span>, () =&gt; {
+  <span class="keyword">const</span> <span class="attr">dispatch</span> = jest.<span class="function">fn</span>();
+  <span class="keyword">const</span> <span class="attr">product</span> = { <span class="attr">id</span>: <span class="string">'1'</span>, <span class="attr">name</span>: <span class="string">'Widget'</span>, <span class="attr">price</span>: 9.99 };
+
+  <span class="function">addItem</span>(dispatch, product);
+
+  <span class="function">expect</span>(dispatch).<span class="function">toHaveBeenCalledWith</span>({
+    <span class="attr">type</span>: <span class="string">'ADD_ITEM'</span>,
+    <span class="attr">payload</span>: product,
+  });
+});
+
+<span class="function">test</span>(<span class="string">'clearCart dispatches CLEAR_CART'</span>, () =&gt; {
+  <span class="keyword">const</span> <span class="attr">dispatch</span> = jest.<span class="function">fn</span>();
+  <span class="function">clearCart</span>(dispatch);
+  <span class="function">expect</span>(dispatch).<span class="function">toHaveBeenCalledWith</span>({ <span class="attr">type</span>: <span class="string">'CLEAR_CART'</span> });
+});</code></pre>
+
+  <!-- ───────── Key Takeaway ───────── -->
+  <div class="key-takeaway">
+    <h3>Key Takeaway</h3>
+    <p>Keep related things together. By co-locating dispatch helpers with the context, you create a clean, self-contained module that is easy to use, test, and maintain. Consumers get an intention-revealing API, your action types stay private, and your bundle stays lean through tree-shaking.</p>
+  </div>
+
+  <!-- ───────── Navigation ───────── -->
+  <nav class="nav">
+    <a href="08-code-splitting.html">&larr; Code Splitting</a>
+    <a href="10-lazy-loading.html">Lazy Loading &rarr;</a>
+  </nav>
+
+</body>
+</html>

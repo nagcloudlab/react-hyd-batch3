@@ -19,6 +19,8 @@ function Item({ todo }) {
         });
     }
     const toggleEdit = () => {
+        if (todo.completed)
+            return;
         setIsEditing(true);
     }
     const handleEdit = (title) => {
@@ -30,6 +32,7 @@ function Item({ todo }) {
         setIsEditing(false);
     }
     return (
+
         <li className={`todo ${todo.completed ? "completed" : ""}`}>
             {isEditing ? (
                 <Input

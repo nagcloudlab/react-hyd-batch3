@@ -1,7 +1,7 @@
 import {
   useState,
   useReducer,
-  use
+  useEffect
 } from "react";
 
 import Footer from "./components/Footer";
@@ -11,13 +11,18 @@ import List from "./components/List";
 import todosReducer from "./reducers/todos.js";
 import TodosContext from "./contexts/TodosContext.jsx";
 
+import {
+  useLocalStorage
+} from './hooks'
+
 function App() {
-  const [todos, dispatch] = useReducer(todosReducer, [
-    { id: 1, title: "Learn Javscript", completed: true },
-    { id: 2, title: "Learn React", completed: false },
-    { id: 3, title: "Learn Redux!", completed: false }
-  ]);
+
+  const [localStorageTodos, setLocalStorageTodos] = useLocalStorage("todos", []);
+  const [todos, dispatch] = useReducer(todosReducer, localStorageTodos);
   const [tab, setTab] = useState('all');
+  useEffect(() => {
+    setLocalStorageTodos(todos); // Sync todos with localStorage
+  }, [todos, setLocalStorageTodos])
 
   const handleToggleAll = (e) => {
     dispatch({
