@@ -1,0 +1,54 @@
+Code Splitting Updates Summary
+Date: 27 March 2026
+
+1. Route-level code splitting implemented
+- Updated router configuration to use lazy route modules.
+- Added a reusable helper to load route components lazily.
+- Applied lazy loading for:
+  - Home
+  - ProductList
+  - CartTable
+  - Login
+  - RoutingDemo
+  - RoutingDemoIndex
+  - RoutingDemoCategory
+  - RoutingDemoItem
+  - RequireAuth
+  - Orders
+  - NotFound
+
+2. Router fallback UI added
+- Added fallbackElement to RouterProvider.
+- Displays: "Loading page..." while lazy route chunks load.
+
+3. Component-level code splitting implemented
+- In Product component, lazy-loaded:
+  - Review
+  - ReviewForm
+- Wrapped lazy components using Suspense with local loading fallbacks:
+  - "Loading reviews UI..."
+  - "Loading review cards..."
+
+4. Navigation prefetch optimization added
+- Added prefetch logic in Navbar for faster first navigation.
+- Prefetch triggers on mouse hover and keyboard focus.
+- Added one-time guard (Set) to avoid repeated prefetches.
+- Prefetch configured for:
+  - /
+  - /products
+  - /cart
+  - /orders (prefetches both RequireAuth and Orders)
+  - /routing-demo
+  - /login
+
+5. Build and test verification
+- Production build completed successfully after route/component lazy loading changes.
+- Production build completed successfully after navbar prefetch changes.
+- Test suite run result:
+  - Test Files: 2 passed
+  - Tests: 15 passed
+
+6. Impact
+- Reduced initial bundle pressure by splitting route and review-related UI code.
+- Improved perceived navigation speed through prefetch-on-intent behavior.
+- No functional regressions detected in build/tests after these updates.

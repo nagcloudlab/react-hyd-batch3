@@ -1,0 +1,116 @@
+.review-launch-btn {
+    border: 0;
+    border-radius: 999px;
+    padding: 0.65rem 1.15rem;
+    color: #ffffff;
+    font-weight: 700;
+    background: linear-gradient(135deg, #0d6efd 0%, #0b5ed7 100%);
+    box-shadow: 0 10px 22px rgba(13, 110, 253, 0.28);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+}
+
+.review-launch-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 14px 24px rgba(13, 110, 253, 0.34);
+    filter: saturate(1.08);
+}
+
+.review-form-shell {
+    position: relative;
+    border-radius: 18px;
+    padding: 2px;
+    background: linear-gradient(120deg, #0d6efd, #4dabf7, #74c0fc);
+    box-shadow: 0 18px 34px rgba(15, 23, 42, 0.16);
+}
+
+.review-form {
+    border-radius: 16px;
+    background:
+        radial-gradient(circle at 12% 18%, rgba(13, 110, 253, 0.12), transparent 40%),
+        radial-gradient(circle at 88% 8%, rgba(116, 192, 252, 0.18), transparent 36%),
+        #ffffff;
+    padding: 1rem;
+}
+
+.review-form-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.9rem;
+}
+
+.review-form-header h5 {
+    color: #0f172a;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+}
+
+.review-close-btn {
+    border: 0;
+    border-radius: 999px;
+    width: 2rem;
+    height: 2rem;
+    color: #334155;
+    background: #e9f2ff;
+    transition: background 0.2s ease, color 0.2s ease;
+}
+
+.review-close-btn:hover {
+    color: #0f172a;
+    background: #dbeafe;
+}
+
+.review-label {
+    font-size: 0.82rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 700;
+    color: #1d4ed8;
+    margin-bottom: 0.35rem;
+}
+
+.review-control {
+    border: 1px solid #bfdbfe;
+    border-radius: 12px;
+    padding: 0.65rem 0.75rem;
+}
+
+.review-control:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.2);
+}
+
+.review-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.7rem;
+}
+
+.review-submit-btn {
+    border: 0;
+    border-radius: 10px;
+    padding: 0.55rem 0.95rem;
+    color: #fff;
+    font-weight: 700;
+    background: linear-gradient(135deg, #0d6efd, #0b5ed7);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.review-submit-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 14px rgba(13, 110, 253, 0.3);
+}
+
+@media (max-width: 576px) {
+    .review-form {
+        padding: 0.85rem;
+    }
+
+    .review-form-actions {
+        justify-content: stretch;
+    }
+
+    .review-form-actions button {
+        flex: 1;
+    }
+}

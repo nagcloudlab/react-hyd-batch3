@@ -155,8 +155,6 @@ Component-based architecture based frameworks
 ..
 
 
-
-
 -> why React.js?
 -----------------
 

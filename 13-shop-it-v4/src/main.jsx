@@ -14,11 +14,13 @@ import RoutingDemo from './components/RoutingDemo.jsx'
 import RoutingDemoIndex from './components/RoutingDemoIndex.jsx'
 import RoutingDemoCategory from './components/RoutingDemoCategory.jsx'
 import RoutingDemoItem from './components/RoutingDemoItem.jsx'
+import ErrorBoundary from './components/ErrorBoundary.jsx'
 
 const router = createBrowserRouter([
   {
     path: '/',
     element: <App />,
+    errorElement: <ErrorBoundary />,
     children: [
       {
         index: true,

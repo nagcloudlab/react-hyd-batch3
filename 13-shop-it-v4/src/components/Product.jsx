@@ -1,32 +1,67 @@
-import { use, useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import classNames from 'classnames';
 import Review from './Review';
 
 import { useContext } from 'react';
 import CartContext from '../contexts/CartContext';
 import ReviewForm from './ReviewForm';
+import { createProductReview, fetchProductReviews } from '../services/productService';
 
-function Product({ product, onBuy }) {
+function Product({
+    product,
+    onBuy,
+    isReviewFormOpen,
+    onReviewFormOpen,
+    onReviewFormClose,
+}) {
     const { cart, dispatch } = useContext(CartContext);
 
     const [currentTab, setCurrentTab] = useState(1);
-    const [reviews, setReviews] = useState([])
+
+    const [reviews, setReviews] = useState([]);
+    const [isReviewsLoading, setIsReviewsLoading] = useState(false);
+    const [reviewsError, setReviewsError] = useState('');
+
+    const [submitReviewError, setSubmitReviewError] = useState('');
+    const reviewsTabRef = useRef(null);
 
     const isInCart = cart.some(cartLine => cartLine.id === product.id);
     const cartLine = cart.find(cartLine => cartLine.id === product.id);
 
     useEffect(() => {
         if (currentTab !== 3) return;
+
         const fetchReviews = async () => {
-            const response = await fetch(`http://localhost:3000/products/${product.id}/reviews`);
-            const data = await response.json();
-            setReviews(data);
-        }
+            try {
+                setIsReviewsLoading(true);
+                setReviewsError('');
+                const data = await fetchProductReviews(product.id);
+                setReviews(data);
+            } catch (err) {
+                setReviewsError(err instanceof Error ? err.message : 'Unable to load reviews.');
+            } finally {
+                setIsReviewsLoading(false);
+            }
+        };
+
         fetchReviews();
-    }, [currentTab])
+    }, [currentTab, product.id]);
+
+    useEffect(() => {
+        if (currentTab !== 3 || !reviewsTabRef.current) return;
+        reviewsTabRef.current.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start',
+        });
+    }, [currentTab]);
 
     const handleTabChange = (tabIndex) => {
         setCurrentTab(tabIndex);
+    }
+
+    const handleTabClick = (e, tabIndex) => {
+        e.preventDefault();
+        handleTabChange(tabIndex);
     }
 
 
@@ -36,19 +71,15 @@ function Product({ product, onBuy }) {
         ))
     }
 
-    const handleNewReview = (review) => {
-        fetch(`http://localhost:3000/products/${product.id}/reviews`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(review)
-        })
-            .then(response => response.json())
-            .then(data => {
-                setReviews([...reviews, data]);
-            })
-    }
+    const handleNewReview = async (review) => {
+        try {
+            setSubmitReviewError('');
+            const createdReview = await createProductReview(product.id, review);
+            setReviews((prevReviews) => [...prevReviews, createdReview]);
+        } catch (err) {
+            setSubmitReviewError(err instanceof Error ? err.message : 'Unable to submit review.');
+        }
+    };
 
     const renderTabPanel = () => {
         switch (currentTab) {
@@ -66,10 +97,18 @@ function Product({ product, onBuy }) {
                 )
             case 3:
                 return (
-                    <>
-                        <ReviewForm onSubmit={handleNewReview} />
+                    <div ref={reviewsTabRef} className="mt-3">
+                        <ReviewForm
+                            isOpen={isReviewFormOpen}
+                            onOpen={onReviewFormOpen}
+                            onClose={onReviewFormClose}
+                            onSubmit={handleNewReview}
+                        />
+                        {submitReviewError && <div className="alert alert-warning">{submitReviewError}</div>}
+                        {isReviewsLoading && <div className="alert alert-secondary">Loading reviews...</div>}
+                        {reviewsError && <div className="alert alert-danger">{reviewsError}</div>}
                         {renderReviews()}
-                    </>
+                    </div>
                 )
             default:
                 return null;
@@ -99,13 +138,13 @@ function Product({ product, onBuy }) {
                 {isInCart && `quantity: ${cartLine.quantity}`}
                 <ul className="mt-3 nav nav-tabs">
                     <li className="nav-item">
-                        <a onClick={() => handleTabChange(1)} className={classNames('nav-link', { active: currentTab === 1 })} href="#">Description</a>
+                        <a onClick={(e) => handleTabClick(e, 1)} className={classNames('nav-link', { active: currentTab === 1 })} href="#">Description</a>
                     </li>
                     <li className="nav-item">
-                        <a onClick={() => handleTabChange(2)} className={classNames('nav-link', { active: currentTab === 2 })} href="#">Specification</a>
+                        <a onClick={(e) => handleTabClick(e, 2)} className={classNames('nav-link', { active: currentTab === 2 })} href="#">Specification</a>
                     </li>
                     <li className="nav-item">
-                        <a onClick={() => handleTabChange(3)} className={classNames('nav-link', { active: currentTab === 3 })} href="#">Reviews</a>
+                        <a onClick={(e) => handleTabClick(e, 3)} className={classNames('nav-link', { active: currentTab === 3 })} href="#">Reviews</a>
                     </li>
                 </ul>
                 {renderTabPanel()}
